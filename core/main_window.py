@@ -1,0 +1,181 @@
+"""Fenêtre principale : menus, barre d'outils, fichiers, export PDF."""
+import os
+
+from PyQt6.QtCore import QSettings, Qt
+from PyQt6.QtGui import QAction, QColor, QKeySequence
+from PyQt6.QtWidgets import QColorDialog, QFileDialog, QMainWindow, QMessageBox
+
+from core.canvas import MindMapCanvas
+from core.format_panel import FormatPanel
+from core.model import MindMap
+
+FILTER = "Carte mentale (*.mindmap.json *.json)"
+
+
+class MainWindow(QMainWindow):
+    def __init__(self, path=None):
+        super().__init__()
+        self.resize(1100, 720)
+        self.canvas = MindMapCanvas()
+        self.setCentralWidget(self.canvas)
+        self.panel = FormatPanel(self.canvas, self)
+        self.addDockWidget(Qt.DockWidgetArea.RightDockWidgetArea, self.panel)
+        self.path = None
+        self.dirty = False
+        self._build_actions()
+        self.canvas.modified.connect(self._on_modified)
+        self.canvas.selectionChanged.connect(self._refresh_actions)
+        self.statusBar().showMessage(
+            "+ ou Tab : sous-idée · Entrée : idée voisine · F2 / double-clic : renommer · Espace : replier · "
+            "Glisser un nœud sur un autre : déplacer")
+        if path:
+            self._open_path(path)
+        self._refresh_title()
+        self._refresh_actions()
+
+    # --- actions ---------------------------------------------------------------
+    def _act(self, menu, text, slot, shortcut=None):
+        a = QAction(text, self)
+        if shortcut:
+            a.setShortcut(QKeySequence(shortcut))
+        a.triggered.connect(slot)
+        menu.addAction(a)
+        return a
+
+    def _build_actions(self):
+        bar = self.menuBar()
+        m = bar.addMenu("&Fichier")
+        self._act(m, "&Nouveau", self.new, QKeySequence.StandardKey.New)
+        self._act(m, "&Ouvrir…", self.open, QKeySequence.StandardKey.Open)
+        self._act(m, "&Enregistrer", self.save, QKeySequence.StandardKey.Save)
+        self._act(m, "Enregistrer &sous…", self.save_as, QKeySequence.StandardKey.SaveAs)
+        m.addSeparator()
+        self._act(m, "Exporter en &PDF…", self.export_pdf, "Ctrl+E")
+
+        m = bar.addMenu("&Édition")
+        self.a_undo = self._act(m, "&Annuler", self.canvas.undo, QKeySequence.StandardKey.Undo)
+        self.a_redo = self._act(m, "&Rétablir", self.canvas.redo, QKeySequence.StandardKey.Redo)
+        m.addSeparator()
+        self._act(m, "Ajouter une sous-idée\t+", self.canvas.add_child)
+        self._act(m, "Ajouter une idée voisine", self.canvas.add_sibling)
+        self._act(m, "Renommer", self.canvas.edit_selected)
+        self.a_del = self._act(m, "Supprimer", self.canvas.delete_selected)
+        self._act(m, "Replier / déplier", self.canvas.toggle_collapse)
+        m.addSeparator()
+        self._act(m, "Couleur de la branche…", self.pick_color)
+        self._act(m, "Couleur automatique", lambda: self.canvas.set_color(None))
+
+        m = bar.addMenu("&Affichage")
+        self._act(m, "Zoom +", lambda: self.canvas.set_zoom(self.canvas.zoom * 1.2), QKeySequence.StandardKey.ZoomIn)
+        self._act(m, "Zoom −", lambda: self.canvas.set_zoom(self.canvas.zoom / 1.2), QKeySequence.StandardKey.ZoomOut)
+        self._act(m, "Ajuster à la fenêtre", self.canvas.fit, "Ctrl+0")
+        toggle = self.panel.toggleViewAction()
+        toggle.setText("Panneau de format")
+        toggle.setShortcut(QKeySequence("Ctrl+Alt+P"))
+        m.addAction(toggle)
+        m.addSeparator()
+        self.a_dark = self._act(m, "Mode nuit", self.set_dark, "Ctrl+Shift+N")
+        self.a_dark.setCheckable(True)
+        dark = QSettings().value("dark")
+        dark = self.palette().window().color().lightness() < 128 if dark is None else str(dark) == "true"
+        self.a_dark.setChecked(dark)
+        self.canvas.set_dark(dark)
+
+    def set_dark(self, dark):
+        self.canvas.set_dark(dark)
+        QSettings().setValue("dark", dark)
+
+    def _refresh_actions(self):
+        self.a_undo.setEnabled(self.canvas.can_undo())
+        self.a_redo.setEnabled(self.canvas.can_redo())
+        self.a_del.setEnabled(self.canvas.selected.parent is not None)
+
+    def _on_modified(self):
+        self.dirty = True
+        self._refresh_title()
+        self._refresh_actions()
+
+    def _refresh_title(self):
+        name = os.path.basename(self.path) if self.path else "Sans titre"
+        self.setWindowTitle(f"{name}{' •' if self.dirty else ''} — MindMapPy")
+
+    # --- fichiers ----------------------------------------------------------------
+    def _confirm_discard(self):
+        if not self.dirty:
+            return True
+        r = QMessageBox.question(self, "Modifications non enregistrées", "Enregistrer avant de continuer ?",
+                                 QMessageBox.StandardButton.Save | QMessageBox.StandardButton.Discard
+                                 | QMessageBox.StandardButton.Cancel)
+        if r == QMessageBox.StandardButton.Save:
+            return self.save()
+        return r == QMessageBox.StandardButton.Discard
+
+    def new(self):
+        if self._confirm_discard():
+            self.canvas.set_map(MindMap())
+            self.path, self.dirty = None, False
+            self._refresh_title()
+            self._refresh_actions()
+
+    def open(self):
+        if not self._confirm_discard():
+            return
+        path, _ = QFileDialog.getOpenFileName(self, "Ouvrir", self._last_dir(), FILTER)
+        if path:
+            self._open_path(path)
+
+    def _open_path(self, path):
+        try:
+            self.canvas.set_map(MindMap.load(path))
+        except (OSError, ValueError, KeyError, TypeError) as e:
+            QMessageBox.critical(self, "Ouverture impossible", f"{path}\n\n{e}")
+            return
+        self.path, self.dirty = path, False
+        QSettings().setValue("lastDir", os.path.dirname(path))
+        self._refresh_title()
+        self._refresh_actions()
+
+    def save(self):
+        return self._write(self.path) if self.path else self.save_as()
+
+    def save_as(self):
+        path, _ = QFileDialog.getSaveFileName(self, "Enregistrer sous", self._last_dir(), FILTER)
+        if not path:
+            return False
+        if not path.endswith(".json"):
+            path += ".mindmap.json"
+        return self._write(path)
+
+    def _write(self, path):
+        try:
+            self.canvas.map.save(path)
+        except OSError as e:
+            QMessageBox.critical(self, "Enregistrement impossible", str(e))
+            return False
+        self.path, self.dirty = path, False
+        QSettings().setValue("lastDir", os.path.dirname(path))
+        self._refresh_title()
+        return True
+
+    def export_pdf(self):
+        base = os.path.splitext(os.path.splitext(self.path)[0])[0] if self.path else "mindmap"
+        path, _ = QFileDialog.getSaveFileName(self, "Exporter en PDF", base + ".pdf", "PDF (*.pdf)")
+        if path:
+            if not path.lower().endswith(".pdf"):
+                path += ".pdf"
+            self.canvas.export_pdf(path)
+            self.statusBar().showMessage(f"PDF exporté : {path}", 5000)
+
+    def pick_color(self):
+        c = QColorDialog.getColor(QColor(self.canvas.selected.branch_color()), self, "Couleur de la branche")
+        if c.isValid():
+            self.canvas.set_color(c.name())
+
+    def _last_dir(self):
+        return QSettings().value("lastDir", os.path.expanduser("~"))
+
+    def closeEvent(self, ev):
+        if self._confirm_discard():
+            ev.accept()
+        else:
+            ev.ignore()
