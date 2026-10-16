@@ -6,6 +6,7 @@ from PyQt6.QtCore import QRectF
 from PyQt6.QtGui import QAction, QColor, QIcon, QKeySequence, QPainter, QPen, QPixmap
 from PyQt6.QtWidgets import QColorDialog, QToolButton, QFileDialog, QMainWindow, QMessageBox
 
+from core.about_dialog import AboutDialog
 from core.canvas import MindMapCanvas
 from core.format_panel import FormatPanel
 from core.icon_panel import IconPanel
@@ -128,6 +129,9 @@ class MainWindow(QMainWindow):
         icons.setText("Panneau des pictogrammes")
         icons.setShortcut(QKeySequence("Ctrl+Alt+I"))
         m.addAction(icons)
+        help_menu = self.menuBar().addMenu("&Aide")
+        about = self._act(help_menu, "À propos de MindMapPy…", self.show_about)
+        about.setMenuRole(QAction.MenuRole.AboutRole)  # macOS : placé dans le menu de l'application
         toggle = self.panel.toggleViewAction()
         toggle.setText("Panneau de format")
         toggle.setShortcut(QKeySequence("Ctrl+Alt+P"))
@@ -151,6 +155,9 @@ class MainWindow(QMainWindow):
         dark = self.palette().window().color().lightness() < 128 if dark is None else str(dark) == "true"
         self.a_dark.setChecked(dark)
         self.canvas.set_dark(dark)
+
+    def show_about(self):
+        AboutDialog(self).exec()
 
     def set_dark(self, dark):
         self.canvas.set_dark(dark)

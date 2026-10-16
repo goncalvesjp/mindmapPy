@@ -415,3 +415,28 @@ def test_adopt_import_in_window(qtbot, tmp_path):
     w.adopt_import(import_freeplane(str(f)), str(f))
     assert w.canvas.map.root.text == "Projet" and w.path is None and w.dirty
     w.dirty = False
+
+
+def test_about_dialog_content(qtbot):
+    from PyQt6.QtWidgets import QTextBrowser
+    from core import __version__
+    from core.about_dialog import FEATURES, SHORTCUTS, AboutDialog
+    d = AboutDialog()
+    qtbot.addWidget(d)
+    assert d.title.text() == "MindMapPy" and __version__ in d.version.text()
+    feats, keys = (d.tabs.widget(i).findChild(QTextBrowser).toPlainText() for i in (0, 1))
+    assert "Export PDF" in feats and len(FEATURES) >= 8
+    assert all(action in keys and shortcut.split()[0] in keys for action, shortcut in SHORTCUTS)
+
+
+def test_help_menu_opens_about(qtbot, monkeypatch):
+    from core.about_dialog import AboutDialog
+    from core.main_window import MainWindow
+    opened = []
+    monkeypatch.setattr(AboutDialog, "exec", lambda self: opened.append(self))
+    w = MainWindow()
+    qtbot.addWidget(w)
+    from PyQt6.QtGui import QAction
+    action = next(a for a in w.findChildren(QAction) if "propos" in a.text())
+    action.trigger()
+    assert opened
