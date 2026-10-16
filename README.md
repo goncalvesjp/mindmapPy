@@ -10,8 +10,7 @@ modification d'une carte, mode nuit, pictogrammes, import Freeplane / MindNode e
 Python 3.9 ou plus récent est nécessaire.
 
 ```bash
-python3 -m venv .venv
-.venv/bin/python -m pip install -r requirements.txt
+make venv                           # crée .venv avec PyQt6 et les outils de test / build
 .venv/bin/python main.py            # au démarrage : nouvelle carte, ouvrir, importer ou fichier récent
 .venv/bin/python main.py carte.mmp  # ouvre directement un fichier
 ```
@@ -70,22 +69,23 @@ réenregistrés en `.mmp` sans écraser l'original.
   généré par `pyuic6`, à ne jamais éditer à la main. Après une modification d'un `.ui` :
   `.venv/bin/pyuic6 ui/<nom>.ui -o gui/ui_<nom>.py`.
 - `core/main_window.py`, `core/format_panel.py`, `core/icon_panel.py`, `core/start_dialog.py`,
-  `core/pdf_dialog.py`, `core/about_dialog.py` : logique des fenêtres (elles héritent des classes générées).
+  `core/pdf_dialog.py`, `core/image_dialog.py`, `core/about_dialog.py` : logique des fenêtres (elles héritent des classes générées).
 - `core/toolbar_icons.py` : icônes de la barre d'outils dessinées en code.
 - `core/icons.py`, `core/emoji.py` : pictogrammes et émoticônes.
 - `core/importers.py` : import Freeplane et MindNode.
+- `packaging/` : configuration PyInstaller (macOS, Linux) et Dockerfile du build Linux.
 - `tools/make_icon.py` : génère `assets/icon.png` et `assets/icon.icns` (`.venv/bin/python tools/make_icon.py`).
 
 ## Tests
 
 ```bash
-.venv/bin/python -m pip install pytest pytest-qt
-QT_QPA_PLATFORM=offscreen .venv/bin/python -m pytest
+make test   # ou : QT_QPA_PLATFORM=offscreen .venv/bin/python -m pytest
 ```
 
 ## Empaquetage
 
 ```bash
+make ui           # régénère gui/ui_*.py depuis ui/*.ui
 make macos        # dist/macos/MindMapPy.app
 make dist-macos   # + archive dist/MindMapPy-macos-<version>.zip
 make linux        # exécutable Linux amd64 via l'outil `container` (dist/linux/mindmap-py)
