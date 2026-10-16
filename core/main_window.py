@@ -2,8 +2,9 @@
 import os
 
 from PyQt6.QtCore import QSettings, QStandardPaths, Qt
-from PyQt6.QtGui import QAction, QColor, QKeySequence
-from PyQt6.QtWidgets import QColorDialog, QFileDialog, QMainWindow, QMessageBox
+from PyQt6.QtCore import QRectF
+from PyQt6.QtGui import QAction, QColor, QIcon, QKeySequence, QPainter, QPen, QPixmap
+from PyQt6.QtWidgets import QColorDialog, QToolButton, QFileDialog, QMainWindow, QMessageBox
 
 from core.canvas import MindMapCanvas
 from core.format_panel import FormatPanel
@@ -11,7 +12,38 @@ from core.icon_panel import IconPanel
 from core.icons import store
 from core.model import MindMap
 
-FILTER = "Carte mentale (*.mindmap.json *.json)"
+EXT = ".mmp"
+from core.pdf_dialog import PdfExportDialog
+from core.start_dialog import OPEN_FILTER
+SAVE_FILTER = "Carte mentale (*.mmp)"
+
+
+MAX_RECENT = 8
+
+
+def recent_files():
+    v = QSettings().value("recent", [])
+    return [v] if isinstance(v, str) else list(v or [])
+
+
+def sidebar_icon(side, color, size=22):
+    """Pictogramme « volet » : cadre arrondi dont la bande gauche ou droite est pleine."""
+    pm = QPixmap(size * 2, size * 2)
+    pm.setDevicePixelRatio(2)
+    pm.fill(Qt.GlobalColor.transparent)
+    p = QPainter(pm)
+    p.setRenderHint(QPainter.RenderHint.Antialiasing)
+    frame = QRectF(2.5, 4.5, size - 5, size - 9)
+    p.setPen(QPen(color, 1.6))
+    p.drawRoundedRect(frame, 2.5, 2.5)
+    pane = QRectF(frame.left(), frame.top(), frame.width() * 0.36, frame.height())
+    if side == "right":
+        pane.moveRight(frame.right())
+    p.setPen(Qt.PenStyle.NoPen)
+    p.setBrush(color)
+    p.drawRect(pane.adjusted(0.8, 0.8, -0.8, -0.8))
+    p.end()
+    return QIcon(pm)
 
 
 class MainWindow(QMainWindow):
@@ -26,6 +58,8 @@ class MainWindow(QMainWindow):
         self.addDockWidget(Qt.DockWidgetArea.LeftDockWidgetArea, self.icon_panel)
         self.panel = FormatPanel(self.canvas, self)
         self.addDockWidget(Qt.DockWidgetArea.RightDockWidgetArea, self.panel)
+        self.icon_panel.hide()  # volets fermés par défaut ; les boutons de la barre d'outils les rouvrent
+        self.panel.hide()
         self.path = None
         self.dirty = False
         self._build_actions()
@@ -72,9 +106,20 @@ class MainWindow(QMainWindow):
         self._act(m, "Couleur automatique", lambda: self.canvas.set_color(None))
 
         m = bar.addMenu("&Affichage")
-        self._act(m, "Zoom +", lambda: self.canvas.set_zoom(self.canvas.zoom * 1.2), QKeySequence.StandardKey.ZoomIn)
-        self._act(m, "Zoom −", lambda: self.canvas.set_zoom(self.canvas.zoom / 1.2), QKeySequence.StandardKey.ZoomOut)
-        self._act(m, "Ajuster à la fenêtre", self.canvas.fit, "Ctrl+0")
+        zoom_in = self._act(m, "Zoom +", lambda: self.canvas.set_zoom(self.canvas.zoom * 1.2), QKeySequence.StandardKey.ZoomIn)
+        zoom_out = self._act(m, "Zoom −", lambda: self.canvas.set_zoom(self.canvas.zoom / 1.2), QKeySequence.StandardKey.ZoomOut)
+        fit = self._act(m, "Ajuster à la page", self.canvas.fit, "Ctrl+0")
+        bar = self.addToolBar("Vue")
+        bar.setObjectName("view_toolbar")
+        bar.setMovable(False)
+        for act, label, tip in ((zoom_in, "Zoom +", "Agrandir (Ctrl++)"), (zoom_out, "Zoom −", "Réduire (Ctrl+-)"),
+                                (fit, "Ajuster à la page", "Ajuster toute la carte à la page (Ctrl+0)")):
+            btn = QToolButton()
+            btn.setDefaultAction(act)
+            btn.setText(label)
+            btn.setToolTip(tip)
+            btn.setFocusPolicy(Qt.FocusPolicy.NoFocus)
+            bar.addWidget(btn)
         icons = self.icon_panel.toggleViewAction()
         icons.setText("Panneau des pictogrammes")
         icons.setShortcut(QKeySequence("Ctrl+Alt+I"))
@@ -83,6 +128,18 @@ class MainWindow(QMainWindow):
         toggle.setText("Panneau de format")
         toggle.setShortcut(QKeySequence("Ctrl+Alt+P"))
         m.addAction(toggle)
+        bar.addSeparator()
+        for dock, side, tip in ((self.icon_panel, "left", "Afficher / masquer le volet de gauche (Ctrl+Alt+I)"),
+                                (self.panel, "right", "Afficher / masquer le volet de droite (Ctrl+Alt+P)")):
+            btn = QToolButton()
+            btn.setIcon(sidebar_icon(side, self.palette().windowText().color()))
+            btn.setToolTip(tip)
+            btn.setCheckable(True)
+            btn.setChecked(not dock.isHidden())
+            btn.setFocusPolicy(Qt.FocusPolicy.NoFocus)
+            btn.clicked.connect(dock.setVisible)
+            dock.visibilityChanged.connect(btn.setChecked)  # reste synchronisé (croix du volet, menu, raccourci)
+            bar.addWidget(btn)
         m.addSeparator()
         self.a_dark = self._act(m, "Mode nuit", self.set_dark, "Ctrl+Shift+N")
         self.a_dark.setCheckable(True)
@@ -130,7 +187,7 @@ class MainWindow(QMainWindow):
     def open(self):
         if not self._confirm_discard():
             return
-        path, _ = QFileDialog.getOpenFileName(self, "Ouvrir", self._last_dir(), FILTER)
+        path, _ = QFileDialog.getOpenFileName(self, "Ouvrir", self._last_dir(), OPEN_FILTER)
         if path:
             self._open_path(path)
 
@@ -141,19 +198,23 @@ class MainWindow(QMainWindow):
             QMessageBox.critical(self, "Ouverture impossible", f"{path}\n\n{e}")
             return
         self.path, self.dirty = path, False
-        QSettings().setValue("lastDir", os.path.dirname(path))
+        self._remember(path)
         self._refresh_title()
         self._refresh_actions()
 
     def save(self):
-        return self._write(self.path) if self.path else self.save_as()
+        # un ancien fichier .json est réenregistré en .mmp plutôt qu'écrasé
+        return self._write(self.path) if self.path and self.path.endswith(EXT) else self.save_as()
 
     def save_as(self):
-        path, _ = QFileDialog.getSaveFileName(self, "Enregistrer sous", self._last_dir(), FILTER)
+        start = os.path.join(self._last_dir(), "Sans titre" + EXT)
+        if self.path:
+            start = os.path.splitext(self.path)[0] + EXT
+        path, _ = QFileDialog.getSaveFileName(self, "Enregistrer sous", start, SAVE_FILTER)
         if not path:
             return False
-        if not path.endswith(".json"):
-            path += ".mindmap.json"
+        if not path.lower().endswith(EXT):
+            path += EXT
         return self._write(path)
 
     def _write(self, path):
@@ -163,23 +224,33 @@ class MainWindow(QMainWindow):
             QMessageBox.critical(self, "Enregistrement impossible", str(e))
             return False
         self.path, self.dirty = path, False
-        QSettings().setValue("lastDir", os.path.dirname(path))
+        self._remember(path)
         self._refresh_title()
         return True
 
     def export_pdf(self):
-        base = os.path.splitext(os.path.splitext(self.path)[0])[0] if self.path else "mindmap"
+        options = PdfExportDialog(self)
+        if options.exec() != PdfExportDialog.DialogCode.Accepted:
+            return
+        opts = options.options()
+        base = os.path.splitext(self.path)[0] if self.path else "mindmap"
         path, _ = QFileDialog.getSaveFileName(self, "Exporter en PDF", base + ".pdf", "PDF (*.pdf)")
         if path:
             if not path.lower().endswith(".pdf"):
                 path += ".pdf"
-            self.canvas.export_pdf(path)
+            self.canvas.export_pdf(path, **opts)
             self.statusBar().showMessage(f"PDF exporté : {path}", 5000)
 
     def pick_color(self):
         c = QColorDialog.getColor(QColor(self.canvas.selected.branch_color()), self, "Couleur de la branche")
         if c.isValid():
             self.canvas.set_color(c.name())
+
+    def _remember(self, path):
+        path = os.path.abspath(path)
+        QSettings().setValue("lastDir", os.path.dirname(path))
+        recent = [path] + [p for p in recent_files() if p != path]
+        QSettings().setValue("recent", recent[:MAX_RECENT])
 
     def _last_dir(self):
         return QSettings().value("lastDir", os.path.expanduser("~"))

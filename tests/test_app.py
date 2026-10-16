@@ -23,7 +23,7 @@ def sample():
 
 def test_roundtrip(tmp_path):
     m = sample()
-    p = tmp_path / "x.mindmap.json"
+    p = tmp_path / "x.mmp"
     m.save(p)
     m2 = MindMap.load(p)
     assert m2.to_dict() == m.to_dict()
@@ -93,7 +93,7 @@ def test_format_roundtrip_and_panel(qtbot, tmp_path):
     c.set_node_format(bold=True, italic=True, size=24, color="#123456")
     c.set_map_style(background="#fff9db", curved=False, line_width=6)
     assert panel.italic.isChecked() and panel.size.currentData() == 24
-    p = tmp_path / "f.mindmap.json"
+    p = tmp_path / "f.mmp"
     c.map.save(p)
     m2 = MindMap.load(p)
     r = m2.root
@@ -126,8 +126,8 @@ def test_icons_toggle_import_roundtrip(qtbot, tmp_path):
     c.toggle_icon(icon_id)
     assert c.selected.icons == ["num:3", icon_id] and c._measure(c.selected)[0] > w0
     assert panel._buttons["num:3"].isChecked()
-    c.map.save(tmp_path / "i.mindmap.json")
-    m2 = MindMap.load(tmp_path / "i.mindmap.json")
+    c.map.save(tmp_path / "i.mmp")
+    m2 = MindMap.load(tmp_path / "i.mmp")
     assert m2.root.icons == ["num:3", icon_id] and icon_id[4:] in m2.images
     # une carte ouverte sans la bibliothèque affiche quand même l'image embarquée
     store.images.clear()
@@ -140,3 +140,173 @@ def test_icons_toggle_import_roundtrip(qtbot, tmp_path):
     c.export_pdf(str(tmp_path / "i.pdf"))
     store.remove_from_library(icon_id)
     assert not list(lib.iterdir())
+
+
+def test_emoji_shortcuts_and_panel(qtbot):
+    from core.emoji import replace_shortcut, search
+    from core.icon_panel import EmojiButton, IconPanel
+    assert replace_shortcut("ok :)") == "ok 🙂"
+    assert replace_shortcut("O:)") == "😇"          # le plus long l'emporte
+    assert replace_shortcut("http://") is None       # pas de remplacement en milieu de mot
+    assert replace_shortcut("a<3") is None
+    assert replace_shortcut("x :fire:") == "x 🔥"
+    assert [e[0] for e in search("feu")] == ["🔥"]
+    c = MindMapCanvas()
+    qtbot.addWidget(c)
+    c.edit_selected()
+    c._editor.setText("Bravo :")
+    QTest.keyClicks(c._editor, ")")
+    assert c._editor.text() == "Bravo 🙂"
+    c.insert_text("🔥")
+    c._commit_edit()
+    assert c.selected.text == "Bravo 🙂🔥"
+    panel = IconPanel(c)
+    qtbot.addWidget(panel)
+    rocket = next(b for b in panel.findChildren(EmojiButton) if b.emoji[0] == "🚀")
+    assert ":rocket:" in rocket.toolTip()
+    rocket.hovered.emit("Fusée : :rocket:")
+    assert panel.shortcut_label.text() == "Fusée : :rocket:"
+    rocket.click()
+    assert c.selected.text.endswith("🚀")
+    c.undo()
+    assert not c.selected.text.endswith("🚀")
+
+
+def test_toolbar_zoom_buttons(qtbot):
+    from PyQt6.QtWidgets import QToolButton
+    from core.main_window import MainWindow
+    w = MainWindow()
+    qtbot.addWidget(w)
+    w.show()
+    btns = {b.text(): b for b in w.findChildren(QToolButton) if b.text() in ("Zoom +", "Zoom −", "Ajuster à la page")}
+    assert len(btns) == 3
+    z0 = w.canvas.zoom
+    btns["Zoom +"].click()
+    assert w.canvas.zoom > z0
+    btns["Zoom −"].click()
+    btns["Zoom −"].click()
+    assert w.canvas.zoom < z0
+    btns["Ajuster à la page"].click()
+    r = w.canvas.content_rect()
+    assert r.width() * w.canvas.zoom <= w.canvas.width() + 1
+
+
+def test_toolbar_panel_buttons(qtbot):
+    from PyQt6.QtWidgets import QToolButton
+    from core.main_window import MainWindow
+    w = MainWindow()
+    qtbot.addWidget(w)
+    w.show()
+    btns = [b for b in w.findChildren(QToolButton) if "volet" in b.toolTip()]
+    left, right = btns
+    assert left.text() == "" and not left.icon().isNull() and not right.icon().isNull()
+    assert not w.icon_panel.isVisible() and not w.panel.isVisible()  # fermés par défaut
+    assert not left.isChecked() and not right.isChecked()
+    left.click()
+    assert w.icon_panel.isVisible() and not w.panel.isVisible()
+    right.click()
+    assert w.panel.isVisible()
+    left.click()
+    right.click()
+    assert not w.icon_panel.isVisible() and not w.panel.isVisible()
+
+
+def test_save_uses_mmp_extension(qtbot, tmp_path, monkeypatch):
+    from PyQt6.QtWidgets import QFileDialog
+    from core.main_window import MainWindow
+    w = MainWindow()
+    qtbot.addWidget(w)
+    asked = []
+    monkeypatch.setattr(QFileDialog, "getSaveFileName",
+                        lambda *a, **k: (asked.append(a[2]) or str(tmp_path / "carte"), ""))
+    assert w.save()
+    assert w.path == str(tmp_path / "carte.mmp") and (tmp_path / "carte.mmp").exists()
+    # un ancien .json ouvert est réenregistré en .mmp, sans écraser l'original
+    old = tmp_path / "vieux.json"
+    w.canvas.map.save(old)
+    w._open_path(str(old))
+    monkeypatch.setattr(QFileDialog, "getSaveFileName", lambda *a, **k: (asked.append(a[2]) or a[2], ""))
+    assert w.save() and w.path == str(tmp_path / "vieux.mmp")
+    assert asked[-1].endswith("vieux.mmp") and old.exists()
+
+
+def test_start_dialog(qtbot, tmp_path, monkeypatch):
+    from PyQt6.QtWidgets import QFileDialog
+    from core.start_dialog import StartDialog
+    f = tmp_path / "a.mmp"
+    MindMap("A").save(f)
+    d = StartDialog([str(f), str(tmp_path / "absent.mmp")])
+    qtbot.addWidget(d)
+    assert d.recent.count() == 1  # le fichier disparu n'est pas proposé
+    d.new_btn.click()
+    assert d.path is None and d.result() == d.DialogCode.Accepted
+    d = StartDialog([str(f)])
+    qtbot.addWidget(d)
+    d.recent.itemActivated.emit(d.recent.item(0))
+    assert d.path == str(f)
+    d = StartDialog()
+    qtbot.addWidget(d)
+    monkeypatch.setattr(QFileDialog, "getOpenFileName", lambda *a, **k: ("", ""))
+    d.open_btn.click()
+    assert d.result() != d.DialogCode.Accepted  # annuler le sélecteur garde la boîte ouverte
+    monkeypatch.setattr(QFileDialog, "getOpenFileName", lambda *a, **k: (str(f), ""))
+    d.open_btn.click()
+    assert d.path == str(f)
+
+
+def test_recent_files_remembered(qtbot, tmp_path):
+    from core.main_window import MainWindow, recent_files
+    w = MainWindow()
+    qtbot.addWidget(w)
+    f = tmp_path / "r.mmp"
+    assert w._write(str(f))
+    assert recent_files()[0] == str(f)
+
+
+def _export_pixels(c, size=(400, 300), **opts):
+    from PyQt6.QtCore import QRectF
+    from PyQt6.QtGui import QImage, QPainter
+    img = QImage(size[0], size[1], QImage.Format.Format_ARGB32)
+    img.fill(0)
+    p = QPainter(img)
+    c.paint_export(p, QRectF(0, 0, *size), **opts)
+    p.end()
+    return img
+
+
+def test_pdf_background_full_page_and_centering(qtbot, tmp_path):
+    c = MindMapCanvas()
+    qtbot.addWidget(c)
+    c.set_map_style(background="#ffeeaa")
+    for corner in ((0, 0), (399, 0), (0, 299), (399, 299)):
+        assert _export_pixels(c).pixelColor(*corner).name() == "#ffeeaa"  # fond sur toute la page
+
+    def bbox(img):  # zone différente du fond
+        bg = img.pixelColor(0, 0)
+        xs = [x for x in range(img.width()) for y in range(img.height()) if img.pixelColor(x, y) != bg]
+        ys = [y for x in range(0, img.width(), 2) for y in range(img.height()) if img.pixelColor(x, y) != bg]
+        return min(xs), max(xs), min(ys), max(ys)
+
+    x0, x1, y0, y1 = bbox(_export_pixels(c, fit=True, center=True, margin=20))
+    assert abs((x0 + x1) / 2 - 200) <= 2 and abs((y0 + y1) / 2 - 150) <= 2          # centré
+    assert x0 >= 19 and x1 <= 381 and y0 >= 19 and y1 <= 281                        # dans les marges
+    fx0, fx1, fy0, fy1 = bbox(_export_pixels(c, fit=False, center=False, margin=20))
+    assert fx0 <= x0 and fy0 < 25                                        # collé en haut à gauche
+    assert (fx1 - fx0) <= (x1 - x0)                                                  # taille réelle <= ajusté
+    for orient in ("auto", "landscape", "portrait"):
+        c.export_pdf(str(tmp_path / f"{orient}.pdf"), page_size="A3", orientation=orient, fit=False, center=False)
+        assert (tmp_path / f"{orient}.pdf").read_bytes().startswith(b"%PDF")
+
+
+def test_pdf_dialog_options_roundtrip(qtbot):
+    from core.pdf_dialog import PdfExportDialog
+    d = PdfExportDialog()
+    qtbot.addWidget(d)
+    d.page.setCurrentText("A3")
+    d.fit.setChecked(False)
+    d.margin.setValue(5)
+    opts = d.options()
+    assert opts == {"page_size": "A3", "orientation": "auto", "fit": False, "center": True, "margin_mm": 5.0}
+    d2 = PdfExportDialog()
+    qtbot.addWidget(d2)
+    assert d2.page.currentText() == "A3" and not d2.fit.isChecked()

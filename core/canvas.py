@@ -4,11 +4,14 @@ from PyQt6.QtGui import (QColor, QFont, QFontMetricsF, QPageLayout, QPageSize, Q
                          QPen)
 from PyQt6.QtWidgets import QLineEdit, QWidget
 
+from core.emoji import replace_shortcut
 from core.icons import store
 from core.layout import compute_layout
 from core.model import MindMap
 
 MARGIN = 40
+PAGE_SIZES = {"A5": QPageSize.PageSizeId.A5, "A4": QPageSize.PageSizeId.A4, "A3": QPageSize.PageSizeId.A3,
+              "Letter": QPageSize.PageSizeId.Letter}
 MAX_UNDO = 100
 
 
@@ -159,10 +162,27 @@ class MindMapCanvas(QWidget):
         ed.setGeometry(r.toRect().adjusted(-4, -4, 4, 4).united(r.toRect().adjusted(-4, -4, 60, 4)))
         ed.selectAll()
         ed.returnPressed.connect(self._commit_edit)
+        ed.textEdited.connect(self._expand_shortcut)
         ed.installEventFilter(self)
         ed.show()
         ed.setFocus()
         self._editor, self._editing = ed, node
+
+    def _expand_shortcut(self, text):
+        """Remplace à la volée un raccourci d'émoticône tapé en fin de texte (« :) » → 🙂)."""
+        new = replace_shortcut(text) if self._editor is not None and self._editor.cursorPosition() == len(text) else None
+        if new is not None:
+            self._editor.setText(new)
+
+    def insert_text(self, text):
+        """Insère du texte (émoticône) dans l'éditeur en cours, sinon à la fin du texte du nœud sélectionné."""
+        if self._editor is not None:
+            self._editor.insert(text)
+            return
+        self._push_undo()
+        self.selected.text += text
+        self._relayout()
+        self.selectionChanged.emit()
 
     def eventFilter(self, obj, ev):
         if obj is self._editor:
@@ -203,12 +223,12 @@ class MindMapCanvas(QWidget):
         self._layout = compute_layout(self.map.root, self._measure)
         self.update()
 
-    def content_rect(self):
+    def content_rect(self, margin=MARGIN):
         rects = [QRectF(x, y, w, h) for x, y, w, h, _ in self._layout.values()]
         r = rects[0]
         for q in rects[1:]:
             r = r.united(q)
-        return r.adjusted(-MARGIN, -MARGIN, MARGIN, MARGIN)
+        return r.adjusted(-margin, -margin, margin, margin)
 
     def render_map(self, p, selected=None, drop_target=None, dark=False):
         """Dessine la carte dans le repère de la scène (utilisé par l'écran et par l'export PDF)."""
@@ -465,22 +485,39 @@ class MindMapCanvas(QWidget):
             self.select(n.parent)
 
     # --- export PDF ----------------------------------------------------------------
-    def export_pdf(self, path):
-        """Exporte la carte entière (vectoriel) sur une page A4 adaptée à son format."""
-        rect = self.content_rect()
-        w = QPdfWriter(path)
-        w.setResolution(72)
-        w.setTitle("Carte mentale")
-        w.setPageSize(QPageSize(QPageSize.PageSizeId.A4))
-        w.setPageOrientation(QPageLayout.Orientation.Landscape if rect.width() >= rect.height()
-                             else QPageLayout.Orientation.Portrait)
-        w.setPageMargins(QMarginsF(20, 20, 20, 20), QPageLayout.Unit.Point)
-        p = QPainter(w)
-        page = QSizeF(w.width(), w.height())
-        scale = min(page.width() / rect.width(), page.height() / rect.height())
-        p.translate((page.width() - rect.width() * scale) / 2, (page.height() - rect.height() * scale) / 2)
+    def paint_export(self, p, page, fit=True, center=True, margin=28.0):
+        """Peint la carte sur `page` (QRectF) : fond sur toute la page, schéma placé dans les marges.
+
+        fit : agrandit ou réduit le schéma pour remplir la zone utile ; sinon taille réelle (réduit
+        seulement s'il ne tient pas). center : centre le schéma dans la zone utile, sinon en haut à gauche.
+        """
+        rect = self.content_rect(0)
+        area = page.adjusted(margin, margin, -margin, -margin)
+        scale = min(area.width() / rect.width(), area.height() / rect.height())
+        if not fit:
+            scale = min(scale, 1.0)
+        size = QSizeF(rect.width() * scale, rect.height() * scale)
+        origin = area.center() - QPointF(size.width() / 2, size.height() / 2) if center else area.topLeft()
+        p.fillRect(page, QColor(self.map.background or "white"))
+        p.save()
+        p.translate(origin)
         p.scale(scale, scale)
         p.translate(-rect.topLeft())
-        p.fillRect(rect, QColor(self.map.background or "white"))
         self.render_map(p)
+        p.restore()
+
+    def export_pdf(self, path, page_size="A4", orientation="auto", fit=True, center=True, margin_mm=10.0):
+        """Exporte la carte en PDF vectoriel. orientation : "auto" (selon la forme du schéma), "landscape", "portrait"."""
+        rect = self.content_rect(0)
+        if orientation == "auto":
+            orientation = "landscape" if rect.width() >= rect.height() else "portrait"
+        w = QPdfWriter(path)
+        w.setResolution(72)  # 1 unité de peinture = 1 point
+        w.setTitle("Carte mentale")
+        w.setPageSize(QPageSize(PAGE_SIZES[page_size]))
+        w.setPageOrientation(QPageLayout.Orientation.Landscape if orientation == "landscape"
+                             else QPageLayout.Orientation.Portrait)
+        w.setPageMargins(QMarginsF(0, 0, 0, 0), QPageLayout.Unit.Point)  # fond plein page
+        p = QPainter(w)
+        self.paint_export(p, QRectF(0, 0, w.width(), w.height()), fit, center, margin_mm * 72 / 25.4)
         p.end()
