@@ -13,6 +13,7 @@ from core.icons import store
 from core.model import MindMap
 
 EXT = ".mmp"
+from core.importers import SOURCES, ImportError_
 from core.pdf_dialog import PdfExportDialog
 from core.start_dialog import OPEN_FILTER
 SAVE_FILTER = "Carte mentale (*.mmp)"
@@ -90,6 +91,9 @@ class MainWindow(QMainWindow):
         self._act(m, "&Enregistrer", self.save, QKeySequence.StandardKey.Save)
         self._act(m, "Enregistrer &sous…", self.save_as, QKeySequence.StandardKey.SaveAs)
         m.addSeparator()
+        sub = m.addMenu("&Importer")
+        for label, file_filter, importer in SOURCES:
+            self._act(sub, label, lambda _=False, f=file_filter, i=importer: self.import_from(f, i))
         self._act(m, "Exporter en &PDF…", self.export_pdf, "Ctrl+E")
 
         m = bar.addMenu("&Édition")
@@ -201,6 +205,32 @@ class MainWindow(QMainWindow):
         self._remember(path)
         self._refresh_title()
         self._refresh_actions()
+
+    def import_from(self, file_filter, importer):
+        """Importe une carte d'un autre logiciel comme nouveau document (à enregistrer en .mmp)."""
+        if not self._confirm_discard():
+            return
+        path, _ = QFileDialog.getOpenFileName(self, "Importer", self._last_dir(), file_filter)
+        if path:
+            self._import_path(path, importer)
+
+    def _import_path(self, path, importer):
+        try:
+            mind_map = importer(path)
+        except ImportError_ as e:
+            QMessageBox.critical(self, "Import impossible", f"{path}\n\n{e}")
+            return
+        self.adopt_import(mind_map, path)
+
+    def adopt_import(self, mind_map, source_path):
+        """Prend une carte importée comme nouveau document non enregistré."""
+        path = source_path
+        self.canvas.set_map(mind_map)
+        self.path, self.dirty = None, True
+        QSettings().setValue("lastDir", os.path.dirname(path))
+        self._refresh_title()
+        self._refresh_actions()
+        self.statusBar().showMessage(f"Importé : {os.path.basename(path)} — pensez à l'enregistrer.", 6000)
 
     def save(self):
         # un ancien fichier .json est réenregistré en .mmp plutôt qu'écrasé

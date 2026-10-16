@@ -310,3 +310,108 @@ def test_pdf_dialog_options_roundtrip(qtbot):
     d2 = PdfExportDialog()
     qtbot.addWidget(d2)
     assert d2.page.currentText() == "A3" and not d2.fit.isChecked()
+
+
+FREEPLANE = """<map version="freeplane 1.11.1">
+<node TEXT="Projet" ID="ID_1">
+  <node TEXT="Idées" POSITION="right" FOLDED="true"><edge COLOR="#ff0000"/>
+    <font BOLD="true" ITALIC="true" SIZE="14"/>
+    <icon BUILTIN="button_ok"/><icon BUILTIN="full-3"/><icon BUILTIN="inconnue"/>
+    <node TEXT="Produit"/>
+  </node>
+  <node POSITION="left"><richcontent TYPE="NODE"><html><head/><body><p>Texte <b>riche</b></p></body></html></richcontent>
+    <node TEXT="Détail"/></node>
+</node></map>"""
+
+
+def test_import_freeplane(tmp_path):
+    from core.importers import import_freeplane
+    f = tmp_path / "a.mm"
+    f.write_text(FREEPLANE, encoding="utf-8")
+    m = import_freeplane(str(f))
+    assert m.root.text == "Projet"
+    a, b = m.root.children
+    assert (a.text, a.collapsed, a.bold, a.italic, a.color) == ("Idées", True, True, True, "#ff0000")
+    assert a.icons == ["sym:check", "num:3"] and a.children[0].text == "Produit"
+    assert b.text == "Texte riche" and b.children[0].text == "Détail"
+
+
+def _mindnode_plist():
+    import plistlib
+    node = lambda t, subs=(): {"nodeID": "x", "title": {"text": t}, "subnodes": list(subs)}
+    main = node("<p>Racine &amp; co</p>", [node("<p>A</p>", [node("A1")]), node("B")])
+    return plistlib.dumps({"canvas": {"mindMaps": [{"mainNode": main}]}}, fmt=plistlib.FMT_BINARY)
+
+
+def test_import_mindnode_package_zip_and_plain(tmp_path):
+    import zipfile
+    from core.importers import ImportError_, import_map, import_mindnode
+    data = _mindnode_plist()
+    pkg = tmp_path / "p.mindnode"
+    pkg.mkdir()
+    (pkg / "contents.xml").write_bytes(data)
+    z = tmp_path / "z.mindnode"
+    with zipfile.ZipFile(z, "w") as zf:
+        zf.writestr("Doc.mindnode/contents.xml", data)
+    plain = tmp_path / "f.mindnode"
+    plain.write_bytes(data)
+    for path in (pkg, z, plain):
+        m = import_map(str(path))
+        assert m.root.text == "Racine & co"
+        assert [c.text for c in m.root.children] == ["A", "B"] and m.root.children[0].children[0].text == "A1"
+    bad = tmp_path / "bad.mindnode"
+    bad.write_bytes(b"pas un plist")
+    with pytest.raises(ImportError_):
+        import_mindnode(str(bad))
+    (tmp_path / "x.mm").write_text("<html/>")
+    with pytest.raises(ImportError_):
+        import_map(str(tmp_path / "x.mm"))
+
+
+def test_window_import_marks_document_new(qtbot, tmp_path):
+    from core.importers import import_freeplane
+    from core.main_window import MainWindow
+    f = tmp_path / "a.mm"
+    f.write_text(FREEPLANE, encoding="utf-8")
+    w = MainWindow()
+    qtbot.addWidget(w)
+    w._import_path(str(f), import_freeplane)
+    assert w.canvas.map.root.text == "Projet" and w.path is None and w.dirty
+    w.dirty = False  # sinon la fermeture par qtbot ouvre la boîte « enregistrer ? » et bloque
+
+
+def test_start_dialog_import(qtbot, tmp_path, monkeypatch):
+    from PyQt6.QtWidgets import QFileDialog, QMessageBox
+    from core.importers import SOURCES
+    from core.start_dialog import StartDialog
+    f = tmp_path / "a.mm"
+    f.write_text(FREEPLANE, encoding="utf-8")
+    d = StartDialog()
+    qtbot.addWidget(d)
+    assert [a.text() for a in d.import_btn.menu().actions()] == [s[0] for s in SOURCES]
+    freeplane = SOURCES[0]
+    monkeypatch.setattr(QFileDialog, "getOpenFileName", lambda *a, **k: (str(f), ""))
+    d.import_file(freeplane[1], freeplane[2])
+    assert d.result() == d.DialogCode.Accepted and d.path == str(f) and d.imported.root.text == "Projet"
+    # fichier invalide : message d'erreur, la boîte reste ouverte
+    bad = tmp_path / "bad.mm"
+    bad.write_text("<html/>")
+    shown = []
+    monkeypatch.setattr(QMessageBox, "critical", lambda *a, **k: shown.append(a[2]))
+    monkeypatch.setattr(QFileDialog, "getOpenFileName", lambda *a, **k: (str(bad), ""))
+    d2 = StartDialog()
+    qtbot.addWidget(d2)
+    d2.import_file(freeplane[1], freeplane[2])
+    assert shown and d2.imported is None and d2.result() != d2.DialogCode.Accepted
+
+
+def test_adopt_import_in_window(qtbot, tmp_path):
+    from core.importers import import_freeplane
+    from core.main_window import MainWindow
+    f = tmp_path / "a.mm"
+    f.write_text(FREEPLANE, encoding="utf-8")
+    w = MainWindow()
+    qtbot.addWidget(w)
+    w.adopt_import(import_freeplane(str(f)), str(f))
+    assert w.canvas.map.root.text == "Projet" and w.path is None and w.dirty
+    w.dirty = False
