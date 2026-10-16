@@ -22,6 +22,7 @@
     </widget>
     <addaction name="menuImport"/>
     <addaction name="actionExportPdf"/>
+    <addaction name="actionExportImage"/>
    </widget>
    <widget class="QMenu" name="menuEdit">
     <property name="title"><string>&amp;Édition</string></property>
@@ -88,6 +89,10 @@
   <action name="actionExportPdf">
    <property name="text"><string>Exporter en &amp;PDF…</string></property>
    <property name="shortcut"><string>Ctrl+E</string></property>
+  </action>
+  <action name="actionExportImage">
+   <property name="text"><string>Exporter en &amp;image (PNG, JPEG)…</string></property>
+   <property name="shortcut"><string>Ctrl+Shift+E</string></property>
   </action>
   <action name="actionUndo">
    <property name="text"><string>&amp;Annuler</string></property>

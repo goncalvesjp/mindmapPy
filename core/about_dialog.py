@@ -18,6 +18,7 @@ FEATURES = [
     "<code>&lt;3</code> → ❤️, <code>:fire:</code> → 🔥).",
     "Import de cartes Freeplane (.mm) et MindNode (.mindnode).",
     "Export PDF vectoriel : format, orientation, ajustement et centrage, marge, fond sur toute la page.",
+    "Export image PNG ou JPEG : résolution jusqu'à 4×, qualité, fond transparent (PNG).",
     "Fichiers .mmp (JSON lisible), images importées embarquées.",
 ]
 
@@ -31,6 +32,7 @@ SHORTCUTS = [
     ("Nouveau / Ouvrir / Enregistrer", "Ctrl+N  /  Ctrl+O  /  Ctrl+S"),
     ("Enregistrer sous", "Ctrl+Maj+S"),
     ("Exporter en PDF", "Ctrl+E"),
+    ("Exporter en image (PNG / JPEG)", "Ctrl+Maj+E"),
     ("Annuler / Rétablir", "Ctrl+Z  /  Ctrl+Maj+Z"),
     ("Zoom + / − / ajuster à la page", "Ctrl++  /  Ctrl+-  /  Ctrl+0"),
     ("Mode nuit", "Ctrl+Maj+N"),

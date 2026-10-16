@@ -9,6 +9,7 @@ from core.about_dialog import AboutDialog
 from core.canvas import MindMapCanvas
 from core.format_panel import FormatPanel
 from core.icon_panel import IconPanel
+from core.image_dialog import ImageExportDialog
 from core.icons import store
 from core.importers import SOURCES, ImportError_
 from core.model import MindMap
@@ -65,7 +66,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             action.setShortcut(QKeySequence(key))
         c = self.canvas
         for action, slot in ((self.actionNew, self.new), (self.actionOpen, self.open), (self.actionSave, self.save),
-                             (self.actionSaveAs, self.save_as), (self.actionExportPdf, self.export_pdf),
+                             (self.actionSaveAs, self.save_as), (self.actionExportPdf, self.export_pdf), (self.actionExportImage, self.export_image),
                              (self.actionUndo, c.undo), (self.actionRedo, c.redo),
                              (self.actionAddChild, c.add_child), (self.actionAddSibling, c.add_sibling),
                              (self.actionRename, c.edit_selected), (self.actionDelete, c.delete_selected),
@@ -225,6 +226,24 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                 path += ".pdf"
             self.canvas.export_pdf(path, **opts)
             self.statusbar.showMessage(f"PDF exporté : {path}", 5000)
+
+    def export_image(self):
+        dialog = ImageExportDialog(self.canvas, self)
+        if dialog.exec() != ImageExportDialog.DialogCode.Accepted:
+            return
+        opts = dialog.options()
+        fmt = opts.pop("format")
+        label = "PNG (*.png)" if fmt == "png" else "JPEG (*.jpg *.jpeg)"
+        base = os.path.splitext(self.path)[0] if self.path else "mindmap"
+        path, _ = QFileDialog.getSaveFileName(self, "Exporter en image", f"{base}.{fmt}", label)
+        if not path:
+            return
+        if not path.lower().endswith((".png",) if fmt == "png" else (".jpg", ".jpeg")):
+            path += "." + fmt
+        if self.canvas.export_image(path, **opts):
+            self.statusbar.showMessage(f"Image exportée : {path}", 5000)
+        else:
+            QMessageBox.critical(self, "Export impossible", f"Impossible d'écrire {path}")
 
     def pick_color(self):
         c = QColorDialog.getColor(QColor(self.canvas.selected.branch_color()), self, "Couleur de la branche")

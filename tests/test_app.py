@@ -486,3 +486,50 @@ def test_custom_background_per_mode_and_toggle(qtbot, tmp_path):
     c.set_dark(True)
     c.undo()
     assert c.map.background_dark is None and c.map.background == "#fff9db"
+
+
+def test_image_export_png_jpeg(qtbot, tmp_path):
+    from PyQt6.QtGui import QImage
+    c = MindMapCanvas()
+    qtbot.addWidget(c)
+    c.set_background("#ffeeaa")
+    r = c.content_rect()
+    png, jpg = tmp_path / "m.png", tmp_path / "m.jpg"
+    assert c.export_image(str(png), scale=2) and c.export_image(str(jpg), scale=1, quality=80)
+    img = QImage(str(png))
+    assert (img.width(), img.height()) == (round(r.width() * 2), round(r.height() * 2))
+    assert img.pixelColor(1, 1).name() == "#ffeeaa" and img.pixelColor(1, 1).alpha() == 255
+    assert QImage(str(jpg)).width() == round(r.width()) and not QImage(str(jpg)).hasAlphaChannel()
+    t = tmp_path / "t.png"                               # fond transparent (PNG seulement)
+    assert c.export_image(str(t), transparent=True)
+    assert QImage(str(t)).pixelColor(1, 1).alpha() == 0
+    tj = tmp_path / "t.jpeg"
+    assert c.export_image(str(tj), transparent=True) and QImage(str(tj)).pixelColor(1, 1).alpha() == 255
+    c.set_dark(True)                                     # suit le mode nuit affiché
+    c.set_background(None)
+    n = tmp_path / "n.png"
+    c.export_image(str(n))
+    assert QImage(str(n)).pixelColor(1, 1).name() == "#1a1b1e"
+    big = c.render_image(scale=10**6)                    # plafonné
+    assert max(big.width(), big.height()) <= 16000
+
+
+def test_image_dialog_and_menu(qtbot, tmp_path, monkeypatch):
+    from PyQt6.QtWidgets import QFileDialog
+    from core.image_dialog import ImageExportDialog
+    from core.main_window import MainWindow
+    w = MainWindow()
+    qtbot.addWidget(w)
+    d = ImageExportDialog(w.canvas)
+    qtbot.addWidget(d)
+    d.format.setCurrentIndex(d.format.findData("jpg"))
+    assert not d.transparent.isEnabled() and d.quality.isEnabled() and " × " in d.sizeLabel.text()
+    d.format.setCurrentIndex(d.format.findData("png"))
+    assert d.transparent.isEnabled() and not d.quality.isEnabled()
+    d.scale.setCurrentIndex(d.scale.findData(3))
+    assert d.options() == {"format": "png", "scale": 3, "quality": 92, "transparent": False}
+    # chaîne complète : boîte d'options (acceptée d'office) puis sélecteur de fichier sans extension
+    monkeypatch.setattr(ImageExportDialog, "exec", lambda self: self.DialogCode.Accepted)
+    monkeypatch.setattr(QFileDialog, "getSaveFileName", lambda *a, **k: (str(tmp_path / "sortie"), ""))
+    w.actionExportImage.trigger()
+    assert (tmp_path / "sortie.png").exists()

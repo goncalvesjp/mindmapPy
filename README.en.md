@@ -30,6 +30,7 @@ python3 -m venv .venv
 - **Import** of **Freeplane** (`.mm`) and **MindNode** (`.mindnode`) maps, from the File menu or the startup dialog.
 - **Vector PDF export**: page size (A5, A4, A3, Letter), orientation, fit and center the diagram, margin; the
   background color fills the whole page.
+- **Image export** as PNG or JPEG: up to 4× resolution, JPEG quality, transparent background (PNG), in the displayed day / night mode.
 
 ## Keyboard shortcuts
 
@@ -43,6 +44,7 @@ python3 -m venv .venv
 | Navigate | arrow keys |
 | New / Open / Save | `Ctrl+N` / `Ctrl+O` / `Ctrl+S` |
 | Export to PDF | `Ctrl+E` |
+| Export as image (PNG / JPEG) | `Ctrl+Shift+E` |
 | Undo / Redo | `Ctrl+Z` / `Ctrl+Shift+Z` |
 | Zoom in / out / fit | `Ctrl++` / `Ctrl+-` / `Ctrl+0` |
 | Night mode | `Ctrl+Shift+N` |

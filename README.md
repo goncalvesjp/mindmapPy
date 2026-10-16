@@ -33,6 +33,7 @@ python3 -m venv .venv
   démarrage.
 - **Export PDF** vectoriel : format (A5, A4, A3, Letter), orientation, ajustement et centrage du schéma, marge ;
   la couleur de fond occupe toute la page.
+- **Export image** PNG ou JPEG : résolution jusqu'à 4×, qualité JPEG, fond transparent (PNG), dans le mode jour / nuit affiché.
 
 ## Raccourcis clavier
 
@@ -46,6 +47,7 @@ python3 -m venv .venv
 | Naviguer | flèches |
 | Nouveau / Ouvrir / Enregistrer | `Ctrl+N` / `Ctrl+O` / `Ctrl+S` |
 | Exporter en PDF | `Ctrl+E` |
+| Exporter en image (PNG / JPEG) | `Ctrl+Maj+E` |
 | Annuler / Rétablir | `Ctrl+Z` / `Ctrl+Maj+Z` |
 | Zoom + / − / ajuster | `Ctrl++` / `Ctrl+-` / `Ctrl+0` |
 | Mode nuit | `Ctrl+Maj+N` |

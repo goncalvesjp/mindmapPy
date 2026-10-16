@@ -1,7 +1,7 @@
 """MindMapCanvas : widget peint à la main (zoom, déplacement, sélection, édition en ligne, glisser-déposer)."""
 from PyQt6.QtCore import QEvent, QMarginsF, QPointF, QRectF, QSizeF, Qt, pyqtSignal
-from PyQt6.QtGui import (QColor, QFont, QFontMetricsF, QPageLayout, QPageSize, QPainter, QPainterPath, QPdfWriter,
-                         QPen)
+from PyQt6.QtGui import (QColor, QFont, QFontMetricsF, QImage, QPageLayout, QPageSize, QPainter, QPainterPath,
+                         QPdfWriter, QPen)
 from PyQt6.QtWidgets import QLineEdit, QWidget
 
 from core.emoji import replace_shortcut
@@ -10,6 +10,7 @@ from core.layout import compute_layout
 from core.model import MindMap
 
 MARGIN = 40
+MAX_IMAGE_PX = 16000  # plafond par côté pour les exports image
 PAGE_SIZES = {"A5": QPageSize.PageSizeId.A5, "A4": QPageSize.PageSizeId.A4, "A3": QPageSize.PageSizeId.A3,
               "Letter": QPageSize.PageSizeId.Letter}
 MAX_UNDO = 100
@@ -515,6 +516,31 @@ class MindMapCanvas(QWidget):
         p.translate(-rect.topLeft())
         self.render_map(p)
         p.restore()
+
+    def render_image(self, scale=2.0, transparent=False):
+        """Dessine la carte entière (avec marge) dans une QImage, dans le mode jour / nuit affiché.
+
+        La taille est plafonnée à MAX_IMAGE_PX par côté : `scale` est réduit si besoin.
+        """
+        rect = self.content_rect()
+        scale = min(scale, MAX_IMAGE_PX / rect.width(), MAX_IMAGE_PX / rect.height())
+        img = QImage(max(1, round(rect.width() * scale)), max(1, round(rect.height() * scale)),
+                     QImage.Format.Format_ARGB32_Premultiplied)
+        img.fill(Qt.GlobalColor.transparent if transparent else self.background_color(self.dark))
+        p = QPainter(img)
+        p.scale(scale, scale)
+        p.translate(-rect.topLeft())
+        self.render_map(p, dark=self.dark)
+        p.end()
+        return img
+
+    def export_image(self, path, scale=2.0, transparent=False, quality=92):
+        """Exporte en PNG ou JPEG selon l'extension ; le JPEG n'a pas de transparence. Renvoie True si écrit."""
+        jpeg = path.lower().endswith((".jpg", ".jpeg"))
+        img = self.render_image(scale, transparent and not jpeg)
+        if jpeg:
+            img = img.convertToFormat(QImage.Format.Format_RGB32)
+        return img.save(path, "JPG" if jpeg else "PNG", quality if jpeg else -1)
 
     def export_pdf(self, path, page_size="A4", orientation="auto", fit=True, center=True, margin_mm=10.0):
         """Exporte la carte en PDF vectoriel. orientation : "auto" (selon la forme du schéma), "landscape", "portrait"."""
