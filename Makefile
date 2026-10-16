@@ -1,5 +1,5 @@
-APP_NAME    := GitUI
-LINUX_BIN   := git-ui
+APP_NAME    := MindMapPy
+LINUX_BIN   := mindmap-py
 VERSION     := $(shell cat VERSION)
 
 PYTHON      := python3

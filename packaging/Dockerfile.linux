@@ -1,0 +1,17 @@
+# Build Linux (amd64) de mindmap-py : `make linux` monte dist/linux sur /out.
+FROM python:3.12-slim
+RUN apt-get update && apt-get install -y --no-install-recommends \
+        libgl1 libegl1 libxkbcommon0 libxkbcommon-x11-0 libdbus-1-3 libfontconfig1 libglib2.0-0 \
+        libxcb-cursor0 libxcb-icccm4 libxcb-image0 libxcb-keysyms1 libxcb-randr0 libxcb-render-util0 \
+        libxcb-shape0 libxcb-xinerama0 libxcb-xkb1 binutils \
+    && rm -rf /var/lib/apt/lists/*
+WORKDIR /src
+COPY requirements.txt .
+RUN pip install --no-cache-dir -r requirements.txt pyinstaller
+COPY main.py VERSION ./
+COPY core core
+COPY gui gui
+COPY assets assets
+COPY packaging packaging
+RUN pyinstaller packaging/linux.spec --noconfirm --clean --distpath /src/dist --workpath /src/build
+CMD ["cp", "/src/dist/mindmap-py", "/out/mindmap-py"]

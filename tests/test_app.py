@@ -533,3 +533,9 @@ def test_image_dialog_and_menu(qtbot, tmp_path, monkeypatch):
     monkeypatch.setattr(QFileDialog, "getSaveFileName", lambda *a, **k: (str(tmp_path / "sortie"), ""))
     w.actionExportImage.trigger()
     assert (tmp_path / "sortie.png").exists()
+
+
+def test_version_file_matches_package():
+    from pathlib import Path
+    from core import __version__
+    assert (Path(__file__).resolve().parent.parent / "VERSION").read_text().strip() == __version__

@@ -83,6 +83,18 @@ réenregistrés en `.mmp` sans écraser l'original.
 QT_QPA_PLATFORM=offscreen .venv/bin/python -m pytest
 ```
 
+## Empaquetage
+
+```bash
+make macos        # dist/macos/MindMapPy.app
+make dist-macos   # + archive dist/MindMapPy-macos-<version>.zip
+make linux        # exécutable Linux amd64 via l'outil `container` (dist/linux/mindmap-py)
+make dist         # les deux archives
+```
+
+La version (`VERSION`) doit rester identique à `core/__init__.py` (un test le vérifie). `make linux` nécessite
+l'outil [`container`](https://github.com/apple/container) d'Apple ; sur une machine Linux, `make linux-native`.
+
 ## Limites connues
 
 - L'import MindNode reprend le texte et la structure ; notes, tâches, étiquettes, images et liens entre nœuds sont

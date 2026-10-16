@@ -78,6 +78,18 @@ in it. Old `.json` files still open; saving them writes a new `.mmp` and leaves 
 QT_QPA_PLATFORM=offscreen .venv/bin/python -m pytest
 ```
 
+## Packaging
+
+```bash
+make macos        # dist/macos/MindMapPy.app
+make dist-macos   # + archive dist/MindMapPy-macos-<version>.zip
+make linux        # Linux amd64 executable via the `container` tool (dist/linux/mindmap-py)
+make dist         # both archives
+```
+
+`VERSION` must match `core/__init__.py` (a test checks it). `make linux` needs Apple's
+[`container`](https://github.com/apple/container) tool; on a Linux machine use `make linux-native`.
+
 ## Known limitations
 
 - MindNode import keeps text and structure; notes, tasks, tags, images and cross-links are ignored. Freeplane import
