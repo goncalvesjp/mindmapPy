@@ -1,0 +1,100 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+ <class>FormatPanel</class>
+ <widget class="QDockWidget" name="FormatPanel">
+  <property name="features">
+   <set>QDockWidget::DockWidgetClosable</set>
+  </property>
+  <property name="allowedAreas">
+   <set>Qt::RightDockWidgetArea</set>
+  </property>
+  <property name="windowTitle"><string>Format</string></property>
+  <widget class="QWidget" name="dockContents">
+   <layout class="QVBoxLayout" name="verticalLayout">
+    <item>
+     <widget class="QLabel" name="title">
+      <property name="styleSheet"><string notr="true">font-weight:600;</string></property>
+     </widget>
+    </item>
+    <item>
+     <widget class="QGroupBox" name="groupText">
+      <property name="title"><string>Texte</string></property>
+      <layout class="QFormLayout" name="formText">
+       <item row="0" column="0" colspan="2">
+        <widget class="QCheckBox" name="bold">
+         <property name="focusPolicy"><enum>Qt::NoFocus</enum></property>
+         <property name="text"><string>Gras</string></property>
+        </widget>
+       </item>
+       <item row="1" column="0" colspan="2">
+        <widget class="QCheckBox" name="italic">
+         <property name="focusPolicy"><enum>Qt::NoFocus</enum></property>
+         <property name="text"><string>Italique</string></property>
+        </widget>
+       </item>
+       <item row="2" column="0">
+        <widget class="QLabel" name="sizeLabel">
+         <property name="text"><string>Taille</string></property>
+        </widget>
+       </item>
+       <item row="2" column="1">
+        <widget class="QComboBox" name="textSize">
+         <property name="focusPolicy"><enum>Qt::NoFocus</enum></property>
+        </widget>
+       </item>
+      </layout>
+     </widget>
+    </item>
+    <item>
+     <widget class="QGroupBox" name="groupBranch">
+      <property name="title"><string>Couleur de la branche</string></property>
+      <layout class="QVBoxLayout" name="branchLayout"/>
+     </widget>
+    </item>
+    <item>
+     <widget class="QGroupBox" name="groupLines">
+      <property name="title"><string>Branches</string></property>
+      <layout class="QFormLayout" name="formLines">
+       <item row="0" column="0">
+        <widget class="QLabel" name="curveLabel">
+         <property name="text"><string>Tracé</string></property>
+        </widget>
+       </item>
+       <item row="0" column="1">
+        <widget class="QComboBox" name="curve">
+         <property name="focusPolicy"><enum>Qt::NoFocus</enum></property>
+         <item><property name="text"><string>Courbes</string></property></item>
+         <item><property name="text"><string>Droites</string></property></item>
+        </widget>
+       </item>
+       <item row="1" column="0">
+        <widget class="QLabel" name="widthLabel">
+         <property name="text"><string>Épaisseur</string></property>
+        </widget>
+       </item>
+       <item row="1" column="1">
+        <widget class="QComboBox" name="lineWidth">
+         <property name="focusPolicy"><enum>Qt::NoFocus</enum></property>
+        </widget>
+       </item>
+      </layout>
+     </widget>
+    </item>
+    <item>
+     <widget class="QGroupBox" name="groupBackground">
+      <property name="title"><string>Fond de la carte</string></property>
+      <layout class="QVBoxLayout" name="backgroundLayout"/>
+     </widget>
+    </item>
+    <item>
+     <spacer name="verticalSpacer">
+      <property name="orientation"><enum>Qt::Vertical</enum></property>
+      <property name="sizeHint" stdset="0"><size><width>20</width><height>40</height></size></property>
+     </spacer>
+    </item>
+   </layout>
+  </widget>
+ </widget>
+ <resources/>
+ <connections/>
+</ui>

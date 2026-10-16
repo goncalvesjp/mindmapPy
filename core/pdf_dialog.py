@@ -1,40 +1,22 @@
-"""Options d'export PDF : format de page, orientation, ajustement, centrage, marge."""
+"""Options d'export PDF (ui/pdf_dialog.ui) : format de page, orientation, ajustement, centrage, marge."""
 from PyQt6.QtCore import QSettings
-from PyQt6.QtWidgets import QCheckBox, QComboBox, QDialog, QDialogButtonBox, QDoubleSpinBox, QFormLayout, QVBoxLayout
+from PyQt6.QtWidgets import QDialog, QDialogButtonBox
 
 from core.canvas import PAGE_SIZES
+from gui.ui_pdf_dialog import Ui_PdfExportDialog
 
 ORIENTATIONS = [("Automatique (selon le schéma)", "auto"), ("Paysage", "landscape"), ("Portrait", "portrait")]
 
 
-class PdfExportDialog(QDialog):
+class PdfExportDialog(QDialog, Ui_PdfExportDialog):
     def __init__(self, parent=None):
         super().__init__(parent)
-        self.setWindowTitle("Exporter en PDF")
-        lay = QVBoxLayout(self)
-        form = QFormLayout()
-        self.page = QComboBox()
+        self.setupUi(self)
         self.page.addItems(list(PAGE_SIZES))
-        self.orientation = QComboBox()
         for label, value in ORIENTATIONS:
             self.orientation.addItem(label, value)
-        self.fit = QCheckBox("Ajuster le schéma à la page")
-        self.center = QCheckBox("Centrer le schéma sur la page")
-        self.margin = QDoubleSpinBox()
-        self.margin.setRange(0, 50)
-        self.margin.setSuffix(" mm")
-        form.addRow("Format", self.page)
-        form.addRow("Orientation", self.orientation)
-        form.addRow(self.fit)
-        form.addRow(self.center)
-        form.addRow("Marge", self.margin)
-        lay.addLayout(form)
-        buttons = QDialogButtonBox(QDialogButtonBox.StandardButton.Ok | QDialogButtonBox.StandardButton.Cancel)
-        buttons.button(QDialogButtonBox.StandardButton.Ok).setText("Exporter…")
-        buttons.button(QDialogButtonBox.StandardButton.Cancel).setText("Annuler")
-        buttons.accepted.connect(self.accept)
-        buttons.rejected.connect(self.reject)
-        lay.addWidget(buttons)
+        self.buttonBox.button(QDialogButtonBox.StandardButton.Ok).setText("Exporter…")
+        self.buttonBox.button(QDialogButtonBox.StandardButton.Cancel).setText("Annuler")
         self._load()
 
     def _load(self):

@@ -1,0 +1,93 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+ <class>IconPanel</class>
+ <widget class="QDockWidget" name="IconPanel">
+  <property name="features">
+   <set>QDockWidget::DockWidgetClosable</set>
+  </property>
+  <property name="allowedAreas">
+   <set>Qt::LeftDockWidgetArea</set>
+  </property>
+  <property name="windowTitle"><string>Pictogrammes</string></property>
+  <widget class="QScrollArea" name="scrollArea">
+   <property name="frameShape"><enum>QFrame::NoFrame</enum></property>
+   <property name="widgetResizable"><bool>true</bool></property>
+   <widget class="QWidget" name="scrollContents">
+    <layout class="QVBoxLayout" name="verticalLayout">
+     <item>
+      <widget class="QLabel" name="title">
+       <property name="styleSheet"><string notr="true">font-weight:600;</string></property>
+      </widget>
+     </item>
+     <item>
+      <widget class="QLabel" name="hint">
+       <property name="text"><string>Cliquer pour ajouter au nœud sélectionné, recliquer pour retirer.</string></property>
+       <property name="wordWrap"><bool>true</bool></property>
+      </widget>
+     </item>
+     <item>
+      <widget class="QGroupBox" name="groupNumbers">
+       <property name="title"><string>Numéros</string></property>
+       <layout class="QGridLayout" name="gridNumbers">
+        <property name="spacing"><number>4</number></property>
+       </layout>
+      </widget>
+     </item>
+     <item>
+      <widget class="QGroupBox" name="groupSymbols">
+       <property name="title"><string>Symboles</string></property>
+       <layout class="QGridLayout" name="gridSymbols">
+        <property name="spacing"><number>4</number></property>
+       </layout>
+      </widget>
+     </item>
+     <item>
+      <widget class="QGroupBox" name="groupEmoji">
+       <property name="title"><string>Émoticônes</string></property>
+       <layout class="QVBoxLayout" name="emojiLayout">
+        <item>
+         <widget class="QLabel" name="shortcut_label">
+          <property name="text"><string>Survoler une émoticône pour voir ses raccourcis clavier.</string></property>
+          <property name="wordWrap"><bool>true</bool></property>
+         </widget>
+        </item>
+        <item>
+         <widget class="QLabel" name="emojiTip">
+          <property name="text"><string>Clic : ajoute au texte du nœud. En renommant, taper un raccourci (ex. « :) ») le remplace par l'émoticône.</string></property>
+          <property name="wordWrap"><bool>true</bool></property>
+         </widget>
+        </item>
+       </layout>
+      </widget>
+     </item>
+     <item>
+      <widget class="QGroupBox" name="imported_box">
+       <property name="title"><string>Importés</string></property>
+       <layout class="QGridLayout" name="imported_layout"/>
+      </widget>
+     </item>
+     <item>
+      <widget class="QPushButton" name="importButton">
+       <property name="focusPolicy"><enum>Qt::NoFocus</enum></property>
+       <property name="text"><string>Importer des images…</string></property>
+      </widget>
+     </item>
+     <item>
+      <widget class="QPushButton" name="clearButton">
+       <property name="focusPolicy"><enum>Qt::NoFocus</enum></property>
+       <property name="text"><string>Retirer les pictogrammes du nœud</string></property>
+      </widget>
+     </item>
+     <item>
+      <spacer name="verticalSpacer">
+       <property name="orientation"><enum>Qt::Vertical</enum></property>
+       <property name="sizeHint" stdset="0"><size><width>20</width><height>40</height></size></property>
+      </spacer>
+     </item>
+    </layout>
+   </widget>
+  </widget>
+ </widget>
+ <resources/>
+ <connections/>
+</ui>

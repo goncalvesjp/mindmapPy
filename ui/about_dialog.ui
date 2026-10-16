@@ -1,0 +1,66 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+ <class>AboutDialog</class>
+ <widget class="QDialog" name="AboutDialog">
+  <property name="geometry"><rect><x>0</x><y>0</y><width>560</width><height>520</height></rect></property>
+  <property name="windowTitle"><string>À propos de MindMapPy</string></property>
+  <layout class="QVBoxLayout" name="verticalLayout">
+   <item>
+    <layout class="QHBoxLayout" name="headerLayout">
+     <item>
+      <widget class="QLabel" name="iconLabel"/>
+     </item>
+     <item>
+      <layout class="QVBoxLayout" name="headerText">
+       <item>
+        <widget class="QLabel" name="title">
+         <property name="styleSheet"><string notr="true">font-size:22px; font-weight:700;</string></property>
+         <property name="text"><string>MindMapPy</string></property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QLabel" name="version"/>
+       </item>
+       <item>
+        <widget class="QLabel" name="tagline">
+         <property name="text"><string>Cartes mentales à la MindNode, en Python et PyQt6</string></property>
+        </widget>
+       </item>
+      </layout>
+     </item>
+    </layout>
+   </item>
+   <item>
+    <widget class="QTabWidget" name="tabs">
+     <property name="currentIndex"><number>0</number></property>
+     <widget class="QWidget" name="featuresTab">
+      <attribute name="title"><string>Fonctionnalités</string></attribute>
+      <layout class="QVBoxLayout" name="featuresLayout">
+       <item><widget class="QTextBrowser" name="featuresView"/></item>
+      </layout>
+     </widget>
+     <widget class="QWidget" name="shortcutsTab">
+      <attribute name="title"><string>Raccourcis clavier</string></attribute>
+      <layout class="QVBoxLayout" name="shortcutsLayout">
+       <item><widget class="QTextBrowser" name="shortcutsView"/></item>
+      </layout>
+     </widget>
+    </widget>
+   </item>
+   <item>
+    <widget class="QDialogButtonBox" name="buttonBox">
+     <property name="standardButtons"><set>QDialogButtonBox::Close</set></property>
+    </widget>
+   </item>
+  </layout>
+ </widget>
+ <resources/>
+ <connections>
+  <connection>
+   <sender>buttonBox</sender>
+   <signal>rejected()</signal>
+   <receiver>AboutDialog</receiver>
+   <slot>reject()</slot>
+  </connection>
+ </connections>
+</ui>

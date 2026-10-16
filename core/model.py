@@ -46,7 +46,8 @@ class MindMap:
     def __init__(self, root_text="Idée centrale"):
         self._ids = count(1)
         self.root = Node(root_text, next(self._ids))
-        self.background = None  # couleur de fond ; None : selon le thème
+        self.background = None  # couleur de fond en mode jour ; None : automatique
+        self.background_dark = None  # idem en mode nuit
         self.curved = True  # branches courbes ou droites
         self.line_width = None  # épaisseur des branches ; None : dégressive
         self.images = {}  # pictogrammes importés utilisés : empreinte -> PNG base64
@@ -107,6 +108,8 @@ class MindMap:
         style = {"curved": self.curved}
         if self.background:
             style["background"] = self.background
+        if self.background_dark:
+            style["background_dark"] = self.background_dark
         if self.line_width:
             style["line_width"] = self.line_width
         out = {"version": FORMAT_VERSION, "style": style, "root": conv(self.root)}
@@ -134,6 +137,7 @@ class MindMap:
         m._ids = count(top + 1)
         style = data.get("style", {})
         m.background, m.curved = style.get("background"), bool(style.get("curved", True))
+        m.background_dark = style.get("background_dark")
         m.line_width = style.get("line_width")
         m.images = dict(data.get("images", {}))
         return m

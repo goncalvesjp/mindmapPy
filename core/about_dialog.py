@@ -1,14 +1,11 @@
 """Boîte de dialogue « À propos » : nom, version, fonctionnalités et raccourcis clavier."""
 from PyQt6.QtCore import Qt
 from PyQt6.QtGui import QPixmap
-from PyQt6.QtWidgets import (QDialog, QDialogButtonBox, QHBoxLayout, QLabel, QTabWidget, QTextBrowser, QVBoxLayout,
-                             QWidget)
+from PyQt6.QtWidgets import QDialog, QDialogButtonBox
 
 from core import __version__
 from core.resources import resource_path
-
-APP_NAME = "MindMapPy"
-TAGLINE = "Cartes mentales à la MindNode, en Python et PyQt6"
+from gui.ui_about_dialog import Ui_AboutDialog
 
 FEATURES = [
     "Carte automatique : idée centrale au milieu, branches courbes de part et d'autre, une couleur par branche.",
@@ -51,38 +48,15 @@ def shortcuts_html():
             "<p><i>Ctrl correspond à ⌘ sous macOS.</i></p>")
 
 
-class AboutDialog(QDialog):
+class AboutDialog(QDialog, Ui_AboutDialog):
+    """Interface dans ui/about_dialog.ui ; le contenu des onglets vient des listes ci-dessus."""
+
     def __init__(self, parent=None):
         super().__init__(parent)
-        self.setWindowTitle(f"À propos de {APP_NAME}")
-        self.resize(560, 520)
-        lay = QVBoxLayout(self)
-
-        head = QHBoxLayout()
-        icon = QLabel()
-        icon.setPixmap(QPixmap(resource_path("assets", "icon.png")).scaled(
+        self.setupUi(self)
+        self.iconLabel.setPixmap(QPixmap(resource_path("assets", "icon.png")).scaled(
             72, 72, Qt.AspectRatioMode.KeepAspectRatio, Qt.TransformationMode.SmoothTransformation))
-        head.addWidget(icon)
-        text = QVBoxLayout()
-        self.title = QLabel(APP_NAME)
-        self.title.setStyleSheet("font-size:22px; font-weight:700;")
-        self.version = QLabel(f"Version {__version__}")
-        text.addWidget(self.title)
-        text.addWidget(self.version)
-        text.addWidget(QLabel(TAGLINE))
-        head.addLayout(text, 1)
-        lay.addLayout(head)
-
-        self.tabs = QTabWidget()
-        for name, html in (("Fonctionnalités", features_html()), ("Raccourcis clavier", shortcuts_html())):
-            view = QTextBrowser()
-            view.setHtml(html)
-            page = QWidget()
-            QVBoxLayout(page).addWidget(view)
-            self.tabs.addTab(page, name)
-        lay.addWidget(self.tabs, 1)
-
-        buttons = QDialogButtonBox(QDialogButtonBox.StandardButton.Close)
-        buttons.button(QDialogButtonBox.StandardButton.Close).setText("Fermer")
-        buttons.rejected.connect(self.reject)
-        lay.addWidget(buttons)
+        self.version.setText(f"Version {__version__}")
+        self.featuresView.setHtml(features_html())
+        self.shortcutsView.setHtml(shortcuts_html())
+        self.buttonBox.button(QDialogButtonBox.StandardButton.Close).setText("Fermer")

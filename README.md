@@ -64,8 +64,12 @@ réenregistrés en `.mmp` sans écraser l'original.
 - `core/model.py` : arbre de nœuds et (dé)sérialisation, sans Qt.
 - `core/layout.py` : calcul de la disposition, sans Qt.
 - `core/canvas.py` : widget de dessin et d'interaction, export PDF.
+- `ui/*.ui` : interface dessinée avec **Qt Designer** (fenêtre principale, volets, dialogues). `gui/ui_*.py` : code
+  généré par `pyuic6`, à ne jamais éditer à la main. Après une modification d'un `.ui` :
+  `.venv/bin/pyuic6 ui/<nom>.ui -o gui/ui_<nom>.py`.
 - `core/main_window.py`, `core/format_panel.py`, `core/icon_panel.py`, `core/start_dialog.py`,
-  `core/pdf_dialog.py` : interface.
+  `core/pdf_dialog.py`, `core/about_dialog.py` : logique des fenêtres (elles héritent des classes générées).
+- `core/toolbar_icons.py` : icônes de la barre d'outils dessinées en code.
 - `core/icons.py`, `core/emoji.py` : pictogrammes et émoticônes.
 - `core/importers.py` : import Freeplane et MindNode.
 - `tools/make_icon.py` : génère `assets/icon.png` et `assets/icon.icns` (`.venv/bin/python tools/make_icon.py`).

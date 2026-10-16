@@ -92,7 +92,7 @@ def test_format_roundtrip_and_panel(qtbot, tmp_path):
     qtbot.addWidget(panel)
     c.set_node_format(bold=True, italic=True, size=24, color="#123456")
     c.set_map_style(background="#fff9db", curved=False, line_width=6)
-    assert panel.italic.isChecked() and panel.size.currentData() == 24
+    assert panel.italic.isChecked() and panel.textSize.currentData() == 24
     p = tmp_path / "f.mmp"
     c.map.save(p)
     m2 = MindMap.load(p)
@@ -180,7 +180,8 @@ def test_toolbar_zoom_buttons(qtbot):
     w.show()
     btns = {k: b for b in w.findChildren(QToolButton) for k in ("Agrandir", "Réduire", "Ajuster") if k in b.toolTip()}
     assert len(btns) == 3
-    assert all(b.text() == "" and not b.icon().isNull() for b in btns.values())  # icônes seules
+    assert w.mainToolBar.toolButtonStyle() == Qt.ToolButtonStyle.ToolButtonIconOnly  # icônes seules
+    assert all(not b.icon().isNull() for b in btns.values())
     z0 = w.canvas.zoom
     btns["Agrandir"].click()
     assert w.canvas.zoom > z0
@@ -200,7 +201,7 @@ def test_toolbar_panel_buttons(qtbot):
     w.show()
     btns = [b for b in w.findChildren(QToolButton) if "volet" in b.toolTip()]
     left, right = btns
-    assert left.text() == "" and not left.icon().isNull() and not right.icon().isNull()
+    assert not left.icon().isNull() and not right.icon().isNull()
     assert not w.icon_panel.isVisible() and not w.panel.isVisible()  # fermés par défaut
     assert not left.isChecked() and not right.isChecked()
     left.click()
@@ -447,13 +448,41 @@ def test_dark_toggle_button(qtbot):
     from core.main_window import MainWindow
     w = MainWindow()
     qtbot.addWidget(w)
-    w.a_dark.setChecked(False)
-    assert w.dark_btn.text() == "" and not w.dark_btn.icon().isNull()  # icône seule
-    assert not w.canvas.dark and "nuit" in w.dark_btn.toolTip()
-    w.dark_btn.click()
-    assert w.canvas.dark and w.a_dark.isChecked() and "jour" in w.dark_btn.toolTip()
-    w.a_dark.trigger()  # depuis le menu : le bouton suit
-    assert not w.canvas.dark and "nuit" in w.dark_btn.toolTip()
-    w.dark_btn.click()
-    w.dark_btn.click()
+    btn = w.mainToolBar.widgetForAction(w.actionDarkMode)
+    w.actionDarkMode.setChecked(False)
+    assert not btn.icon().isNull() and w.mainToolBar.toolButtonStyle() == Qt.ToolButtonStyle.ToolButtonIconOnly
+    w.actionDarkMode.setChecked(False)
+    w.canvas.set_dark(False)
+    assert "nuit" in w.actionDarkMode.toolTip()
+    btn.click()
+    assert w.canvas.dark and w.actionDarkMode.isChecked() and "jour" in btn.toolTip()
+    w.actionDarkMode.trigger()  # depuis le menu : le bouton suit
+    assert not w.canvas.dark and "nuit" in btn.toolTip()
+    btn.click()
+    btn.click()
     assert not w.canvas.dark
+
+
+def test_custom_background_per_mode_and_toggle(qtbot, tmp_path):
+    from core.format_panel import FormatPanel
+    c = MindMapCanvas()
+    qtbot.addWidget(c)
+    panel = FormatPanel(c)
+    qtbot.addWidget(panel)
+    c.set_background("#fff9db")                      # fond choisi en mode jour
+    assert c.background_color(False).name() == "#fff9db"
+    c.set_dark(True)                                  # la bascule agit malgré le fond personnalisé
+    assert c.background_color(True).name() == "#1a1b1e" and c.current_background() is None
+    assert "nuit" in panel.groupBackground.title() and panel.background._current is None
+    c.set_background("#0b2545")                       # fond propre au mode nuit
+    assert c.map.background == "#fff9db" and c.map.background_dark == "#0b2545"
+    assert c.grab().toImage().pixelColor(2, 2).name() == "#0b2545"
+    c.set_dark(False)
+    assert c.grab().toImage().pixelColor(2, 2).name() == "#fff9db" and "jour" in panel.groupBackground.title()
+    p = tmp_path / "bg.mmp"
+    c.map.save(p)
+    m2 = MindMap.load(p)
+    assert (m2.background, m2.background_dark) == ("#fff9db", "#0b2545")
+    c.set_dark(True)
+    c.undo()
+    assert c.map.background_dark is None and c.map.background == "#fff9db"

@@ -1,10 +1,10 @@
-"""Panneau latéral rétractable : mise en forme du nœud sélectionné, couleurs de branche et de fond."""
+"""Panneau latéral rétractable (ui/format_panel.ui) : mise en forme du nœud, couleurs de branche et de fond."""
 from PyQt6.QtCore import Qt
 from PyQt6.QtGui import QColor
-from PyQt6.QtWidgets import (QCheckBox, QColorDialog, QComboBox, QDockWidget, QFormLayout, QGridLayout, QGroupBox,
-                             QLabel, QPushButton, QToolButton, QVBoxLayout, QWidget)
+from PyQt6.QtWidgets import QColorDialog, QDockWidget, QGridLayout, QPushButton, QToolButton, QWidget
 
 from core.model import PALETTE
+from gui.ui_format_panel import Ui_FormatPanel
 
 BACKGROUNDS = ["#ffffff", "#f8f9fa", "#fff9db", "#e7f5ff", "#ebfbee", "#212529", "#1a1b1e", "#0b2545"]
 SIZES = [10, 12, 13, 14, 16, 18, 20, 24, 28, 36]
@@ -53,76 +53,37 @@ class Swatches(QWidget):
                             " border-radius:12px;")
 
 
-class FormatPanel(QDockWidget):
+class FormatPanel(QDockWidget, Ui_FormatPanel):
+    _syncing = False
+
     def __init__(self, canvas, parent=None):
-        super().__init__("Format", parent)
+        super().__init__(parent)
+        self.setupUi(self)
         self.canvas = canvas
-        self.setFeatures(QDockWidget.DockWidgetFeature.DockWidgetClosable)
-        self.setAllowedAreas(Qt.DockWidgetArea.RightDockWidgetArea)
-        body = QWidget()
-        lay = QVBoxLayout(body)
-        self.title = QLabel()
-        self.title.setStyleSheet("font-weight:600;")
-        lay.addWidget(self.title)
-
-        box = QGroupBox("Texte")
-        f = QFormLayout(box)
-        self.bold = QCheckBox("Gras")
-        self.italic = QCheckBox("Italique")
-        for c in (self.bold, self.italic):
-            c.setFocusPolicy(Qt.FocusPolicy.NoFocus)
-        self.size = QComboBox()
-        self.size.addItem("Auto", None)
+        self.textSize.addItem("Auto", None)
         for s in SIZES:
-            self.size.addItem(f"{s} px", s)
-        self.size.setFocusPolicy(Qt.FocusPolicy.NoFocus)
-        f.addRow(self.bold)
-        f.addRow(self.italic)
-        f.addRow("Taille", self.size)
-        lay.addWidget(box)
-
-        box = QGroupBox("Couleur de la branche")
-        v = QVBoxLayout(box)
-        self.branch = Swatches(PALETTE, lambda c: self.canvas.set_node_format(color=c))
-        v.addWidget(self.branch)
-        lay.addWidget(box)
-
-        box = QGroupBox("Branches")
-        f = QFormLayout(box)
-        self.curve = QComboBox()
-        self.curve.addItem("Courbes", True)
-        self.curve.addItem("Droites", False)
-        self.width = QComboBox()
-        self.width.addItem("Dégressive", None)
+            self.textSize.addItem(f"{s} px", s)
+        self.lineWidth.addItem("Dégressive", None)
         for w in WIDTHS:
-            self.width.addItem(f"{w} px", w)
-        for c in (self.curve, self.width):
-            c.setFocusPolicy(Qt.FocusPolicy.NoFocus)
-        f.addRow("Tracé", self.curve)
-        f.addRow("Épaisseur", self.width)
-        lay.addWidget(box)
-
-        box = QGroupBox("Fond de la carte")
-        v = QVBoxLayout(box)
-        self.background = Swatches(BACKGROUNDS, lambda c: self.canvas.set_map_style(background=c))
-        v.addWidget(self.background)
-        lay.addWidget(box)
-        lay.addStretch()
-        self.setWidget(body)
+            self.lineWidth.addItem(f"{w} px", w)
+        self.curve.setItemData(0, True)
+        self.curve.setItemData(1, False)
+        self.branch = Swatches(PALETTE, lambda c: self.canvas.set_node_format(color=c))
+        self.branchLayout.addWidget(self.branch)
+        self.background = Swatches(BACKGROUNDS, self.canvas.set_background)
+        self.backgroundLayout.addWidget(self.background)
 
         self.bold.toggled.connect(lambda on: self._apply(bold=on))
         self.italic.toggled.connect(lambda on: self._apply(italic=on))
-        self.size.activated.connect(lambda i: self._apply(size=self.size.itemData(i)))
+        self.textSize.activated.connect(lambda i: self._apply(size=self.textSize.itemData(i)))
         self.curve.activated.connect(lambda i: self.canvas.set_map_style(curved=self.curve.itemData(i)))
-        self.width.activated.connect(lambda i: self.canvas.set_map_style(line_width=self.width.itemData(i)))
+        self.lineWidth.activated.connect(lambda i: self.canvas.set_map_style(line_width=self.lineWidth.itemData(i)))
         canvas.selectionChanged.connect(self.sync)
         self.sync()
 
     def _apply(self, **fields):
         if not self._syncing:
             self.canvas.set_node_format(**fields)
-
-    _syncing = False
 
     def sync(self):
         """Reflète l'état du nœud sélectionné et de la carte dans les contrôles."""
@@ -132,10 +93,11 @@ class FormatPanel(QDockWidget):
             self.title.setText(f"Nœud : {n.text}")
             self.bold.setChecked(n.bold if n.bold is not None else n.depth() <= 1)
             self.italic.setChecked(n.italic)
-            self.size.setCurrentIndex(max(0, self.size.findData(n.size)))
+            self.textSize.setCurrentIndex(max(0, self.textSize.findData(n.size)))
             self.branch.refresh(n.color)
             self.curve.setCurrentIndex(self.curve.findData(m.curved))
-            self.width.setCurrentIndex(max(0, self.width.findData(m.line_width)))
-            self.background.refresh(m.background)
+            self.lineWidth.setCurrentIndex(max(0, self.lineWidth.findData(m.line_width)))
+            self.background.refresh(self.canvas.current_background())
+            self.groupBackground.setTitle(f"Fond de la carte ({'nuit' if self.canvas.dark else 'jour'})")
         finally:
             self._syncing = False

@@ -1,0 +1,73 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+ <class>PdfExportDialog</class>
+ <widget class="QDialog" name="PdfExportDialog">
+  <property name="windowTitle"><string>Exporter en PDF</string></property>
+  <layout class="QVBoxLayout" name="verticalLayout">
+   <item>
+    <layout class="QFormLayout" name="form">
+     <item row="0" column="0">
+      <widget class="QLabel" name="pageLabel">
+       <property name="text"><string>Format</string></property>
+      </widget>
+     </item>
+     <item row="0" column="1">
+      <widget class="QComboBox" name="page"/>
+     </item>
+     <item row="1" column="0">
+      <widget class="QLabel" name="orientationLabel">
+       <property name="text"><string>Orientation</string></property>
+      </widget>
+     </item>
+     <item row="1" column="1">
+      <widget class="QComboBox" name="orientation"/>
+     </item>
+     <item row="2" column="0" colspan="2">
+      <widget class="QCheckBox" name="fit">
+       <property name="text"><string>Ajuster le schéma à la page</string></property>
+      </widget>
+     </item>
+     <item row="3" column="0" colspan="2">
+      <widget class="QCheckBox" name="center">
+       <property name="text"><string>Centrer le schéma sur la page</string></property>
+      </widget>
+     </item>
+     <item row="4" column="0">
+      <widget class="QLabel" name="marginLabel">
+       <property name="text"><string>Marge</string></property>
+      </widget>
+     </item>
+     <item row="4" column="1">
+      <widget class="QDoubleSpinBox" name="margin">
+       <property name="suffix"><string> mm</string></property>
+       <property name="maximum"><double>50.000000000000000</double></property>
+      </widget>
+     </item>
+    </layout>
+   </item>
+   <item>
+    <widget class="QDialogButtonBox" name="buttonBox">
+     <property name="orientation"><enum>Qt::Horizontal</enum></property>
+     <property name="standardButtons">
+      <set>QDialogButtonBox::Cancel|QDialogButtonBox::Ok</set>
+     </property>
+    </widget>
+   </item>
+  </layout>
+ </widget>
+ <resources/>
+ <connections>
+  <connection>
+   <sender>buttonBox</sender>
+   <signal>accepted()</signal>
+   <receiver>PdfExportDialog</receiver>
+   <slot>accept()</slot>
+  </connection>
+  <connection>
+   <sender>buttonBox</sender>
+   <signal>rejected()</signal>
+   <receiver>PdfExportDialog</receiver>
+   <slot>reject()</slot>
+  </connection>
+ </connections>
+</ui>

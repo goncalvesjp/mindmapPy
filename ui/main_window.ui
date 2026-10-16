@@ -1,0 +1,156 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+ <class>MainWindow</class>
+ <widget class="QMainWindow" name="MainWindow">
+  <property name="geometry">
+   <rect><x>0</x><y>0</y><width>1100</width><height>720</height></rect>
+  </property>
+  <property name="windowTitle">
+   <string>MindMapPy</string>
+  </property>
+  <widget class="QWidget" name="centralwidget"/>
+  <widget class="QMenuBar" name="menubar">
+   <widget class="QMenu" name="menuFile">
+    <property name="title"><string>&amp;Fichier</string></property>
+    <addaction name="actionNew"/>
+    <addaction name="actionOpen"/>
+    <addaction name="actionSave"/>
+    <addaction name="actionSaveAs"/>
+    <addaction name="separator"/>
+    <widget class="QMenu" name="menuImport">
+     <property name="title"><string>&amp;Importer</string></property>
+    </widget>
+    <addaction name="menuImport"/>
+    <addaction name="actionExportPdf"/>
+   </widget>
+   <widget class="QMenu" name="menuEdit">
+    <property name="title"><string>&amp;Édition</string></property>
+    <addaction name="actionUndo"/>
+    <addaction name="actionRedo"/>
+    <addaction name="separator"/>
+    <addaction name="actionAddChild"/>
+    <addaction name="actionAddSibling"/>
+    <addaction name="actionRename"/>
+    <addaction name="actionDelete"/>
+    <addaction name="actionToggleCollapse"/>
+    <addaction name="separator"/>
+    <addaction name="actionBranchColor"/>
+    <addaction name="actionAutoColor"/>
+   </widget>
+   <widget class="QMenu" name="menuView">
+    <property name="title"><string>&amp;Affichage</string></property>
+    <addaction name="actionZoomIn"/>
+    <addaction name="actionZoomOut"/>
+    <addaction name="actionFit"/>
+    <addaction name="separator"/>
+    <addaction name="actionToggleIcons"/>
+    <addaction name="actionToggleFormat"/>
+    <addaction name="separator"/>
+    <addaction name="actionDarkMode"/>
+   </widget>
+   <widget class="QMenu" name="menuHelp">
+    <property name="title"><string>&amp;Aide</string></property>
+    <addaction name="actionAbout"/>
+   </widget>
+   <addaction name="menuFile"/>
+   <addaction name="menuEdit"/>
+   <addaction name="menuView"/>
+   <addaction name="menuHelp"/>
+  </widget>
+  <widget class="QToolBar" name="mainToolBar">
+   <property name="windowTitle"><string>Vue</string></property>
+   <property name="movable"><bool>false</bool></property>
+   <property name="toolButtonStyle"><enum>Qt::ToolButtonIconOnly</enum></property>
+   <attribute name="toolBarArea"><enum>TopToolBarArea</enum></attribute>
+   <attribute name="toolBarBreak"><bool>false</bool></attribute>
+   <addaction name="actionZoomIn"/>
+   <addaction name="actionZoomOut"/>
+   <addaction name="actionFit"/>
+   <addaction name="separator"/>
+   <addaction name="actionToggleIcons"/>
+   <addaction name="actionToggleFormat"/>
+   <addaction name="separator"/>
+   <addaction name="actionDarkMode"/>
+  </widget>
+  <widget class="QStatusBar" name="statusbar"/>
+  <action name="actionNew">
+   <property name="text"><string>&amp;Nouveau</string></property>
+  </action>
+  <action name="actionOpen">
+   <property name="text"><string>&amp;Ouvrir…</string></property>
+  </action>
+  <action name="actionSave">
+   <property name="text"><string>&amp;Enregistrer</string></property>
+  </action>
+  <action name="actionSaveAs">
+   <property name="text"><string>Enregistrer &amp;sous…</string></property>
+  </action>
+  <action name="actionExportPdf">
+   <property name="text"><string>Exporter en &amp;PDF…</string></property>
+   <property name="shortcut"><string>Ctrl+E</string></property>
+  </action>
+  <action name="actionUndo">
+   <property name="text"><string>&amp;Annuler</string></property>
+  </action>
+  <action name="actionRedo">
+   <property name="text"><string>&amp;Rétablir</string></property>
+  </action>
+  <action name="actionAddChild">
+   <property name="text"><string>Ajouter une sous-idée&#9;+</string></property>
+  </action>
+  <action name="actionAddSibling">
+   <property name="text"><string>Ajouter une idée voisine</string></property>
+  </action>
+  <action name="actionRename">
+   <property name="text"><string>Renommer</string></property>
+  </action>
+  <action name="actionDelete">
+   <property name="text"><string>Supprimer</string></property>
+  </action>
+  <action name="actionToggleCollapse">
+   <property name="text"><string>Replier / déplier</string></property>
+  </action>
+  <action name="actionBranchColor">
+   <property name="text"><string>Couleur de la branche…</string></property>
+  </action>
+  <action name="actionAutoColor">
+   <property name="text"><string>Couleur automatique</string></property>
+  </action>
+  <action name="actionZoomIn">
+   <property name="text"><string>Zoom +</string></property>
+   <property name="toolTip"><string>Agrandir (Ctrl++)</string></property>
+  </action>
+  <action name="actionZoomOut">
+   <property name="text"><string>Zoom −</string></property>
+   <property name="toolTip"><string>Réduire (Ctrl+-)</string></property>
+  </action>
+  <action name="actionFit">
+   <property name="text"><string>Ajuster à la page</string></property>
+   <property name="toolTip"><string>Ajuster toute la carte à la page (Ctrl+0)</string></property>
+   <property name="shortcut"><string>Ctrl+0</string></property>
+  </action>
+  <action name="actionToggleIcons">
+   <property name="checkable"><bool>true</bool></property>
+   <property name="text"><string>Panneau des pictogrammes</string></property>
+   <property name="toolTip"><string>Afficher / masquer le volet de gauche (Ctrl+Alt+I)</string></property>
+   <property name="shortcut"><string>Ctrl+Alt+I</string></property>
+  </action>
+  <action name="actionToggleFormat">
+   <property name="checkable"><bool>true</bool></property>
+   <property name="text"><string>Panneau de format</string></property>
+   <property name="toolTip"><string>Afficher / masquer le volet de droite (Ctrl+Alt+P)</string></property>
+   <property name="shortcut"><string>Ctrl+Alt+P</string></property>
+  </action>
+  <action name="actionDarkMode">
+   <property name="checkable"><bool>true</bool></property>
+   <property name="text"><string>Mode nuit</string></property>
+   <property name="shortcut"><string>Ctrl+Shift+N</string></property>
+  </action>
+  <action name="actionAbout">
+   <property name="text"><string>À propos de MindMapPy…</string></property>
+   <property name="menuRole"><enum>QAction::AboutRole</enum></property>
+  </action>
+ </widget>
+ <resources/>
+ <connections/>
+</ui>

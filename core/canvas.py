@@ -312,8 +312,17 @@ class MindMapCanvas(QWidget):
             p.setFont(_font(2))
             p.drawText(ghost + QPointF(10, 0), self._drag_node.text)
 
+    def current_background(self):
+        """Fond choisi pour le mode courant (jour ou nuit) ; None : automatique."""
+        return self.map.background_dark if self.dark else self.map.background
+
     def background_color(self, dark):
-        return QColor(self.map.background) if self.map.background else QColor("#1a1b1e" if dark else "#f8f9fa")
+        custom = self.map.background_dark if dark else self.map.background
+        return QColor(custom) if custom else QColor("#1a1b1e" if dark else "#f8f9fa")
+
+    def set_background(self, color):
+        """Choisit le fond du mode courant : jour et nuit gardent chacun leur couleur."""
+        self.set_map_style(**{"background_dark" if self.dark else "background": color})
 
     def set_node_format(self, **fields):
         """Applique bold / italic / size / color au nœud sélectionné (un seul pas d'annulation)."""
@@ -344,7 +353,7 @@ class MindMapCanvas(QWidget):
             self.selectionChanged.emit()
 
     def set_map_style(self, **fields):
-        """Modifie background / curved / line_width de la carte."""
+        """Modifie background / background_dark / curved / line_width de la carte."""
         self._push_undo()
         for k, v in fields.items():
             setattr(self.map, k, v)
@@ -354,6 +363,7 @@ class MindMapCanvas(QWidget):
     def set_dark(self, dark):
         self.dark = dark
         self.update()
+        self.selectionChanged.emit()  # le panneau de format affiche le fond du mode courant
 
     # --- repères -----------------------------------------------------------------
     def _to_scene(self, pt):

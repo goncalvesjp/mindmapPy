@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+ <class>StartDialog</class>
+ <widget class="QDialog" name="StartDialog">
+  <property name="minimumSize"><size><width>420</width><height>0</height></size></property>
+  <property name="windowTitle"><string>MindMapPy</string></property>
+  <layout class="QVBoxLayout" name="verticalLayout">
+   <item>
+    <widget class="QLabel" name="heading">
+     <property name="styleSheet"><string notr="true">font-size:16px; font-weight:600;</string></property>
+     <property name="text"><string>Que souhaitez-vous faire ?</string></property>
+    </widget>
+   </item>
+   <item>
+    <layout class="QHBoxLayout" name="buttonRow">
+     <item>
+      <widget class="QPushButton" name="new_btn">
+       <property name="text"><string>Nouvelle carte</string></property>
+       <property name="default"><bool>true</bool></property>
+      </widget>
+     </item>
+     <item>
+      <widget class="QPushButton" name="open_btn">
+       <property name="text"><string>Ouvrir un fichier…</string></property>
+      </widget>
+     </item>
+     <item>
+      <widget class="QPushButton" name="import_btn">
+       <property name="text"><string>Importer…</string></property>
+      </widget>
+     </item>
+    </layout>
+   </item>
+   <item>
+    <widget class="QLabel" name="recentLabel">
+     <property name="text"><string>Fichiers récents</string></property>
+    </widget>
+   </item>
+   <item>
+    <widget class="QListWidget" name="recent"/>
+   </item>
+  </layout>
+ </widget>
+ <resources/>
+ <connections/>
+</ui>
