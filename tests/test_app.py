@@ -178,15 +178,16 @@ def test_toolbar_zoom_buttons(qtbot):
     w = MainWindow()
     qtbot.addWidget(w)
     w.show()
-    btns = {b.text(): b for b in w.findChildren(QToolButton) if b.text() in ("Zoom +", "Zoom −", "Ajuster à la page")}
+    btns = {k: b for b in w.findChildren(QToolButton) for k in ("Agrandir", "Réduire", "Ajuster") if k in b.toolTip()}
     assert len(btns) == 3
+    assert all(b.text() == "" and not b.icon().isNull() for b in btns.values())  # icônes seules
     z0 = w.canvas.zoom
-    btns["Zoom +"].click()
+    btns["Agrandir"].click()
     assert w.canvas.zoom > z0
-    btns["Zoom −"].click()
-    btns["Zoom −"].click()
+    btns["Réduire"].click()
+    btns["Réduire"].click()
     assert w.canvas.zoom < z0
-    btns["Ajuster à la page"].click()
+    btns["Ajuster"].click()
     r = w.canvas.content_rect()
     assert r.width() * w.canvas.zoom <= w.canvas.width() + 1
 
@@ -440,3 +441,19 @@ def test_help_menu_opens_about(qtbot, monkeypatch):
     action = next(a for a in w.findChildren(QAction) if "propos" in a.text())
     action.trigger()
     assert opened
+
+
+def test_dark_toggle_button(qtbot):
+    from core.main_window import MainWindow
+    w = MainWindow()
+    qtbot.addWidget(w)
+    w.a_dark.setChecked(False)
+    assert w.dark_btn.text() == "" and not w.dark_btn.icon().isNull()  # icône seule
+    assert not w.canvas.dark and "nuit" in w.dark_btn.toolTip()
+    w.dark_btn.click()
+    assert w.canvas.dark and w.a_dark.isChecked() and "jour" in w.dark_btn.toolTip()
+    w.a_dark.trigger()  # depuis le menu : le bouton suit
+    assert not w.canvas.dark and "nuit" in w.dark_btn.toolTip()
+    w.dark_btn.click()
+    w.dark_btn.click()
+    assert not w.canvas.dark
