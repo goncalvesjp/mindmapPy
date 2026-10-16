@@ -1,0 +1,30 @@
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.eggs/
+
+# Environnements virtuels
+.venv/
+venv/
+env/
+
+# Tests et couverture
+.pytest_cache/
+.coverage
+htmlcov/
+
+# Empaquetage (PyInstaller)
+build/
+dist/
+
+# IDE et éditeurs
+.idea/
+.vscode/
+*.swp
+
+# macOS
+.DS_Store
+
+# Claude Code (réglages locaux)
+.claude/settings.local.json
