@@ -1,12 +1,14 @@
 """Fenêtre principale : menus, barre d'outils, fichiers, export PDF."""
 import os
 
-from PyQt6.QtCore import QSettings, Qt
+from PyQt6.QtCore import QSettings, QStandardPaths, Qt
 from PyQt6.QtGui import QAction, QColor, QKeySequence
 from PyQt6.QtWidgets import QColorDialog, QFileDialog, QMainWindow, QMessageBox
 
 from core.canvas import MindMapCanvas
 from core.format_panel import FormatPanel
+from core.icon_panel import IconPanel
+from core.icons import store
 from core.model import MindMap
 
 FILTER = "Carte mentale (*.mindmap.json *.json)"
@@ -18,6 +20,10 @@ class MainWindow(QMainWindow):
         self.resize(1100, 720)
         self.canvas = MindMapCanvas()
         self.setCentralWidget(self.canvas)
+        library = QStandardPaths.writableLocation(QStandardPaths.StandardLocation.AppDataLocation)
+        store.set_library_dir(os.path.join(library, "icons"))
+        self.icon_panel = IconPanel(self.canvas, self)
+        self.addDockWidget(Qt.DockWidgetArea.LeftDockWidgetArea, self.icon_panel)
         self.panel = FormatPanel(self.canvas, self)
         self.addDockWidget(Qt.DockWidgetArea.RightDockWidgetArea, self.panel)
         self.path = None
@@ -69,6 +75,10 @@ class MainWindow(QMainWindow):
         self._act(m, "Zoom +", lambda: self.canvas.set_zoom(self.canvas.zoom * 1.2), QKeySequence.StandardKey.ZoomIn)
         self._act(m, "Zoom −", lambda: self.canvas.set_zoom(self.canvas.zoom / 1.2), QKeySequence.StandardKey.ZoomOut)
         self._act(m, "Ajuster à la fenêtre", self.canvas.fit, "Ctrl+0")
+        icons = self.icon_panel.toggleViewAction()
+        icons.setText("Panneau des pictogrammes")
+        icons.setShortcut(QKeySequence("Ctrl+Alt+I"))
+        m.addAction(icons)
         toggle = self.panel.toggleViewAction()
         toggle.setText("Panneau de format")
         toggle.setShortcut(QKeySequence("Ctrl+Alt+P"))

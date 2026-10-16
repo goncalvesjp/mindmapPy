@@ -17,6 +17,7 @@ class Node:
         self.color = None  # surcharge explicite ; sinon hérité de la branche
         self.bold = None  # None : style automatique selon la profondeur
         self.italic = False
+        self.icons = []  # identifiants de pictogrammes (voir core/icons.py)
         self.size = None  # taille du texte en px ; None : automatique
 
     def depth(self):
@@ -48,6 +49,7 @@ class MindMap:
         self.background = None  # couleur de fond ; None : selon le thème
         self.curved = True  # branches courbes ou droites
         self.line_width = None  # épaisseur des branches ; None : dégressive
+        self.images = {}  # pictogrammes importés utilisés : empreinte -> PNG base64
 
     def find(self, node_id):
         return next((n for n in self.root.walk() if n.id == node_id), None)
@@ -97,6 +99,8 @@ class MindMap:
                 d["italic"] = True
             if n.size:
                 d["size"] = n.size
+            if n.icons:
+                d["icons"] = list(n.icons)
             if n.children:
                 d["children"] = [conv(c) for c in n.children]
             return d
@@ -105,7 +109,11 @@ class MindMap:
             style["background"] = self.background
         if self.line_width:
             style["line_width"] = self.line_width
-        return {"version": FORMAT_VERSION, "style": style, "root": conv(self.root)}
+        out = {"version": FORMAT_VERSION, "style": style, "root": conv(self.root)}
+        used = {i[4:] for n in self.root.walk() for i in n.icons if i.startswith("img:")}
+        if used:
+            out["images"] = {k: v for k, v in self.images.items() if k in used}
+        return out
 
     @classmethod
     def from_dict(cls, data):
@@ -118,6 +126,7 @@ class MindMap:
             top = max(top, n.id)
             n.parent, n.collapsed, n.color = parent, bool(d.get("collapsed")), d.get("color")
             n.bold, n.italic, n.size = d.get("bold"), bool(d.get("italic")), d.get("size")
+            n.icons = [str(i) for i in d.get("icons", [])]
             n.children = [build(c, n) for c in d.get("children", [])]
             return n
 
@@ -126,6 +135,7 @@ class MindMap:
         style = data.get("style", {})
         m.background, m.curved = style.get("background"), bool(style.get("curved", True))
         m.line_width = style.get("line_width")
+        m.images = dict(data.get("images", {}))
         return m
 
     def save(self, path):

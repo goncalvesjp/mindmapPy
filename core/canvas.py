@@ -4,6 +4,7 @@ from PyQt6.QtGui import (QColor, QFont, QFontMetricsF, QPageLayout, QPageSize, Q
                          QPen)
 from PyQt6.QtWidgets import QLineEdit, QWidget
 
+from core.icons import store
 from core.layout import compute_layout
 from core.model import MindMap
 
@@ -17,6 +18,17 @@ def _font(depth, node=None):
     f.setBold(node.bold if node is not None and node.bold is not None else depth <= 1)
     f.setItalic(bool(node and node.italic))
     return f
+
+
+ICON_GAP = 4
+
+
+def _icon_size(node):
+    return round(QFontMetricsF(_font(node.depth(), node)).height())
+
+
+def _icons_width(node):
+    return len(node.icons) * (_icon_size(node) + ICON_GAP)
 
 
 def _padding(depth):
@@ -50,6 +62,7 @@ class MindMapCanvas(QWidget):
     # --- document ------------------------------------------------------------
     def set_map(self, mind_map):
         self._cancel_edit()
+        store.register_embedded(mind_map.images)
         self.map = mind_map
         self.selected = mind_map.root
         self._undo.clear()
@@ -142,6 +155,7 @@ class MindMapCanvas(QWidget):
         f = _font(node.depth(), node)
         f.setPixelSize(max(8, round(f.pixelSize() * self.zoom)))
         ed.setFont(f)
+        r.setLeft(r.left() + _icons_width(node) * self.zoom)
         ed.setGeometry(r.toRect().adjusted(-4, -4, 4, 4).united(r.toRect().adjusted(-4, -4, 60, 4)))
         ed.selectAll()
         ed.returnPressed.connect(self._commit_edit)
@@ -183,7 +197,7 @@ class MindMapCanvas(QWidget):
         d = node.depth()
         fm = QFontMetricsF(_font(d, node))
         px, py = _padding(d)
-        return max(fm.horizontalAdvance(node.text), 24) + 2 * px, fm.height() + 2 * py
+        return max(fm.horizontalAdvance(node.text), 24) + 2 * px + _icons_width(node), fm.height() + 2 * py
 
     def _relayout(self):
         self._layout = compute_layout(self.map.root, self._measure)
@@ -245,7 +259,10 @@ class MindMapCanvas(QWidget):
                 p.setPen(QPen(col, 2.5))
                 p.drawLine(r.bottomLeft(), r.bottomRight())
                 p.setPen(fg)
-            p.drawText(r, Qt.AlignmentFlag.AlignCenter, n.text)
+            p.drawText(r.adjusted(_icons_width(n), 0, 0, 0), Qt.AlignmentFlag.AlignCenter, n.text)
+            isz = _icon_size(n)
+            for k, icon in enumerate(n.icons):
+                store.draw(p, QRectF(r.left() + _padding(d)[0] + k * (isz + ICON_GAP), r.center().y() - isz / 2, isz, isz), icon)
             if n.collapsed and n.children:
                 side = self._layout[n.id][4] or 1
                 c = anchor(n, side) + QPointF(side * 11, 0)
@@ -285,6 +302,26 @@ class MindMapCanvas(QWidget):
             setattr(self.selected, k, v)
         self._relayout()
         self.selectionChanged.emit()
+
+    def toggle_icon(self, icon_id):
+        """Ajoute le pictogramme au nœud sélectionné, ou le retire s'il y est déjà."""
+        self._push_undo()
+        icons = self.selected.icons
+        if icon_id in icons:
+            icons.remove(icon_id)
+        else:
+            icons.append(icon_id)
+            if icon_id.startswith("img:"):
+                self.map.images[icon_id[4:]] = store.embed(icon_id) or ""
+        self._relayout()
+        self.selectionChanged.emit()
+
+    def clear_icons(self):
+        if self.selected.icons:
+            self._push_undo()
+            self.selected.icons = []
+            self._relayout()
+            self.selectionChanged.emit()
 
     def set_map_style(self, **fields):
         """Modifie background / curved / line_width de la carte."""

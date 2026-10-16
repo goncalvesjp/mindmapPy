@@ -102,3 +102,41 @@ def test_format_roundtrip_and_panel(qtbot, tmp_path):
     c.undo()
     assert c.map.background is None and c.map.curved and panel.curve.currentData() is True
     c.export_pdf(str(tmp_path / "f.pdf"))
+
+
+def test_icons_toggle_import_roundtrip(qtbot, tmp_path):
+    from PyQt6.QtGui import QColor, QImage
+    from core.icon_panel import IconPanel
+    from core.icons import IconStore, store
+    img = QImage(300, 100, QImage.Format.Format_ARGB32)
+    img.fill(QColor("#ff0000"))
+    src = tmp_path / "pic.png"
+    img.save(str(src))
+    lib = tmp_path / "lib"
+    store.set_library_dir(str(lib))
+    icon_id = store.import_file(str(src))
+    assert icon_id and max(store.images[icon_id[4:]].width(), store.images[icon_id[4:]].height()) == 128
+    assert len(list(lib.iterdir())) == 1
+    c = MindMapCanvas()
+    qtbot.addWidget(c)
+    panel = IconPanel(c)
+    qtbot.addWidget(panel)
+    w0 = c._measure(c.selected)[0]
+    c.toggle_icon("num:3")
+    c.toggle_icon(icon_id)
+    assert c.selected.icons == ["num:3", icon_id] and c._measure(c.selected)[0] > w0
+    assert panel._buttons["num:3"].isChecked()
+    c.map.save(tmp_path / "i.mindmap.json")
+    m2 = MindMap.load(tmp_path / "i.mindmap.json")
+    assert m2.root.icons == ["num:3", icon_id] and icon_id[4:] in m2.images
+    # une carte ouverte sans la bibliothèque affiche quand même l'image embarquée
+    store.images.clear()
+    store.register_embedded(m2.images)
+    assert icon_id[4:] in store.images
+    c.toggle_icon("num:3")
+    assert c.selected.icons == [icon_id]
+    c.undo()
+    assert "num:3" in c.selected.icons
+    c.export_pdf(str(tmp_path / "i.pdf"))
+    store.remove_from_library(icon_id)
+    assert not list(lib.iterdir())
