@@ -34,7 +34,7 @@ Les cibles dépendent de `venv`, qui réinstalle les dépendances à chaque appe
 - `core/format_panel.py`, `core/icon_panel.py` : volets droit / gauche (fermés au démarrage).
 - `core/start_dialog.py`, `pdf_dialog.py`, `image_dialog.py`, `about_dialog.py` : dialogues.
 - `core/icons.py` (pictogrammes + bibliothèque d'images importées), `core/emoji.py` (catalogue et raccourcis texte),
-  `core/importers.py` (Freeplane `.mm`, MindNode `.mindnode`, sans Qt), `core/toolbar_icons.py` (icônes dessinées).
+  `core/importers/` et `core/exporters/` (Freeplane `.mm`, MindNode `.mindnode`, un module par format, sans Qt), `core/toolbar_icons.py` (icônes dessinées).
 - `assets/icon.png` / `icon.icns` : générés par `.venv/bin/python tools/make_icon.py`. `core/resources.py` résout
   les chemins, aussi dans l'exécutable PyInstaller. `packaging/` : specs PyInstaller et Dockerfile Linux.
 - `tests/` : `conftest.py` isole les `QSettings` dans un dossier temporaire ; tests Qt avec `qtbot`.

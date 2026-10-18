@@ -21,6 +21,10 @@
      <property name="title"><string>&amp;Importer</string></property>
     </widget>
     <addaction name="menuImport"/>
+    <widget class="QMenu" name="menuExport">
+     <property name="title"><string>E&amp;xporter vers</string></property>
+    </widget>
+    <addaction name="menuExport"/>
     <addaction name="actionExportPdf"/>
     <addaction name="actionExportImage"/>
    </widget>

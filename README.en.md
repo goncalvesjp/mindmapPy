@@ -67,7 +67,7 @@ in it. Old `.json` files still open; saving them writes a new `.mmp` and leaves 
   `core/pdf_dialog.py`, `core/image_dialog.py`, `core/about_dialog.py`: window logic (they inherit from the generated classes).
 - `core/toolbar_icons.py`: toolbar icons drawn in code.
 - `core/icons.py`, `core/emoji.py`: pictograms and emoticons.
-- `core/importers.py`: Freeplane and MindNode import.
+- `core/importers/`, `core/exporters/`: Freeplane and MindNode import and export (one module per format).
 - `packaging/`: PyInstaller configuration (macOS, Linux) and the Linux build Dockerfile.
 - `tools/make_icon.py`: generates `assets/icon.png` and `assets/icon.icns` (`.venv/bin/python tools/make_icon.py`).
 

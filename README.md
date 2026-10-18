@@ -3,7 +3,7 @@
 *[English version](README.en.md)*
 
 Application de cartes mentales (mind maps) à la MindNode, écrite en Python avec PyQt6 : création, visualisation et
-modification d'une carte, mode nuit, pictogrammes, import Freeplane / MindNode et export PDF.
+modification d'une carte, mode nuit, pictogrammes, import / export Freeplane / MindNode et export PDF.
 
 ## Installation
 
@@ -72,7 +72,7 @@ réenregistrés en `.mmp` sans écraser l'original.
   `core/pdf_dialog.py`, `core/image_dialog.py`, `core/about_dialog.py` : logique des fenêtres (elles héritent des classes générées).
 - `core/toolbar_icons.py` : icônes de la barre d'outils dessinées en code.
 - `core/icons.py`, `core/emoji.py` : pictogrammes et émoticônes.
-- `core/importers.py` : import Freeplane et MindNode.
+- `core/importers/` et `core/exporters/` : import et export Freeplane / MindNode (un module par format).
 - `packaging/` : configuration PyInstaller (macOS, Linux) et Dockerfile du build Linux.
 - `tools/make_icon.py` : génère `assets/icon.png` et `assets/icon.icns` (`.venv/bin/python tools/make_icon.py`).
 

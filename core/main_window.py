@@ -10,6 +10,7 @@ from core.canvas import MindMapCanvas
 from core.format_panel import FormatPanel
 from core.icon_panel import IconPanel
 from core.image_dialog import ImageExportDialog
+from core.exporters import TARGETS
 from core.icons import store
 from core.importers import SOURCES, ImportError_
 from core.model import MindMap
@@ -79,6 +80,9 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         for label, file_filter, importer in SOURCES:
             self.menuImport.addAction(label).triggered.connect(
                 lambda _=False, f=file_filter, i=importer: self.import_from(f, i))
+        for label, file_filter, ext, exporter in TARGETS:
+            self.menuExport.addAction(label).triggered.connect(
+                lambda _=False, f=file_filter, e=ext, x=exporter: self.export_to(f, e, x))
 
         color = self.palette().windowText().color()  # icônes de la barre d'outils
         self.actionZoomIn.setIcon(zoom_icon("+", color))
@@ -244,6 +248,21 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             self.statusbar.showMessage(f"Image exportée : {path}", 5000)
         else:
             QMessageBox.critical(self, "Export impossible", f"Impossible d'écrire {path}")
+
+    def export_to(self, file_filter, ext, exporter):
+        """Exporte la carte vers le format d'un autre logiciel."""
+        base = os.path.splitext(self.path)[0] if self.path else os.path.join(self._last_dir(), "mindmap")
+        path, _ = QFileDialog.getSaveFileName(self, "Exporter", base + ext, file_filter)
+        if not path:
+            return
+        if not path.lower().endswith(ext):
+            path += ext
+        try:
+            exporter(self.canvas.map, path)
+        except OSError as e:
+            QMessageBox.critical(self, "Export impossible", f"{path}\n\n{e}")
+            return
+        self.statusbar.showMessage(f"Exporté : {path}", 5000)
 
     def pick_color(self):
         c = QColorDialog.getColor(QColor(self.canvas.selected.branch_color()), self, "Couleur de la branche")

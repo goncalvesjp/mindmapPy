@@ -539,3 +539,36 @@ def test_version_file_matches_package():
     from pathlib import Path
     from core import __version__
     assert (Path(__file__).resolve().parent.parent / "VERSION").read_text().strip() == __version__
+
+
+def test_export_roundtrip_freeplane_and_mindnode(tmp_path):
+    from core.exporters import export_freeplane, export_mindnode
+    from core.importers import import_map
+    from core.model import MindMap
+    m = MindMap("Racine & co")
+    a = m.add_child(m.root, "A <1>")
+    a.bold, a.italic, a.icons = True, True, ["sym:check"]
+    m.add_child(a, "A1")
+    b = m.add_child(m.root, "B")
+    b.collapsed = True
+    m.add_child(b, "B1")
+    b.collapsed = True
+    for exporter, name in ((export_freeplane, "x.mm"), (export_mindnode, "x.mindnode")):
+        path = tmp_path / name
+        exporter(m, str(path))
+        r = import_map(str(path))
+        assert r.root.text == "Racine & co"
+        assert [c.text for c in r.root.children] == ["A <1>", "B"]
+        assert r.root.children[0].children[0].text == "A1"
+    r = import_map(str(tmp_path / "x.mm"))
+    a2, b2 = r.root.children
+    assert (a2.bold, a2.italic, a2.icons, b2.collapsed) == (True, True, ["sym:check"], True)
+
+
+def test_window_export_menu(qtbot):
+    from core.exporters import TARGETS
+    from core.main_window import MainWindow
+    w = MainWindow()
+    qtbot.addWidget(w)
+    assert [a.text() for a in w.menuExport.actions()] == [t[0] for t in TARGETS]
+    w.dirty = False
