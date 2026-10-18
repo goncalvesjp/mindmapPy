@@ -25,16 +25,16 @@ Les cibles dépendent de `venv`, qui réinstalle les dépendances à chaque appe
 - `ui/*.ui` : sources Qt Designer (fenêtre, volets, dialogues). `gui/ui_*.py` : générés par pyuic6, **ne jamais les
   éditer à la main** (`make ui`). Les classes de `core/` héritent de `Ui_*` et ne contiennent que la logique ;
   ce qui est construit dynamiquement (grilles de pictogrammes, pastilles, canvas) reste en code.
-- `core/model.py` : `MindMap` / `Node`, (dé)sérialisation JSON, sans Qt. Format `.mmp` (JSON) ; les anciens `.json`
+- `core/model/mindmap.py` : `MindMap` / `Node`, (dé)sérialisation JSON, sans Qt. Format `.mmp` (JSON) ; les anciens `.json`
   s'ouvrent encore.
-- `core/layout.py` : disposition en voies (racine au centre, branches à droite / à gauche), pur Python.
+- `core/model/layout.py` : disposition en voies (racine au centre, branches à droite / à gauche), pur Python.
 - `core/canvas.py` : `MindMapCanvas`, widget peint à la main (zoom, sélection, édition en ligne, glisser-déposer,
   annuler / rétablir par instantanés, rendu partagé écran / PDF / image).
 - `core/main_window.py` : `MainWindow`, actions déclarées dans le `.ui` et branchées dans `_connect_actions`.
-- `core/format_panel.py`, `core/icon_panel.py` : volets droit / gauche (fermés au démarrage).
-- `core/start_dialog.py`, `pdf_dialog.py`, `image_dialog.py`, `about_dialog.py` : dialogues.
-- `core/icons.py` (pictogrammes + bibliothèque d'images importées), `core/emoji.py` (catalogue et raccourcis texte),
-  `core/importers/` et `core/exporters/` (Freeplane `.mm`, MindNode `.mindnode`, un module par format, sans Qt), `core/toolbar_icons.py` (icônes dessinées).
+- `core/panels/format_panel.py`, `icon_panel.py` : volets droit / gauche (fermés au démarrage).
+- `core/dialogs/` : `start_dialog.py`, `pdf_dialog.py`, `image_dialog.py`, `about_dialog.py`.
+- `core/icons/library.py` (pictogrammes + bibliothèque d'images importées), `core/icons/emoji.py` (catalogue et raccourcis texte),
+  `core/importers/` et `core/exporters/` (Freeplane `.mm`, MindNode `.mindnode`, un module par format, sans Qt), `core/icons/toolbar_icons.py` (icônes dessinées).
 - `assets/icon.png` / `icon.icns` : générés par `.venv/bin/python tools/make_icon.py`. `core/resources.py` résout
   les chemins, aussi dans l'exécutable PyInstaller. `packaging/` : specs PyInstaller et Dockerfile Linux.
 - `tests/` : `conftest.py` isole les `QSettings` dans un dossier temporaire ; tests Qt avec `qtbot`.

@@ -3,7 +3,7 @@ from PyQt6.QtCore import Qt
 from PyQt6.QtGui import QColor
 from PyQt6.QtWidgets import QColorDialog, QDockWidget, QGridLayout, QPushButton, QToolButton, QWidget
 
-from core.model import PALETTE
+from core.model.mindmap import PALETTE
 from gui.ui_format_panel import Ui_FormatPanel
 
 BACKGROUNDS = ["#ffffff", "#f8f9fa", "#fff9db", "#e7f5ff", "#ebfbee", "#212529", "#1a1b1e", "#0b2545"]

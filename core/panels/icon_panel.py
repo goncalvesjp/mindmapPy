@@ -3,8 +3,8 @@ from PyQt6.QtCore import QSize, Qt, pyqtSignal
 from PyQt6.QtGui import QFont
 from PyQt6.QtWidgets import QDockWidget, QFileDialog, QGridLayout, QLabel, QMenu, QMessageBox, QToolButton
 
-from core.emoji import CATEGORIES, EMOJIS
-from core.icons import NUMBERS, SYMBOL_NAMES, SYMBOLS, store
+from core.icons.emoji import CATEGORIES, EMOJIS
+from core.icons.library import NUMBERS, SYMBOL_NAMES, SYMBOLS, store
 from gui.ui_icon_panel import Ui_IconPanel
 
 COLUMNS = 5

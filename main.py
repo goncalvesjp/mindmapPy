@@ -7,7 +7,7 @@ from PyQt6.QtWidgets import QApplication
 
 from core.main_window import MainWindow, recent_files
 from core.resources import resource_path
-from core.start_dialog import StartDialog
+from core.dialogs.start_dialog import StartDialog
 
 
 def main():

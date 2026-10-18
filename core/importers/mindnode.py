@@ -6,7 +6,7 @@ import re
 import zipfile
 
 from core.importers.errors import ImportError_
-from core.model import MindMap
+from core.model.mindmap import MindMap
 
 
 def _load_mindnode_plist(path):
@@ -36,6 +36,23 @@ def _mindnode_text(node):
     return " ".join(html.unescape(re.sub(r"<[^>]+>", "", text)).split())
 
 
+def _mindnode_color(value):
+    """« {r, g, b, a} » (composantes 0-1) -> « #rrggbb » ; None si illisible."""
+    try:
+        r, g, b = (round(float(x) * 255) for x in str(value).strip("{}").split(",")[:3])
+    except ValueError:
+        return None
+    return "#%02x%02x%02x" % (r, g, b)
+
+
+def _mindnode_font(node):
+    """Gras / italique d'après le nom PostScript de la police du titre (MindNode Classic)."""
+    title = node.get("title")
+    match = re.search(r'postscriptname:\s*"([^"]*)"', str(title.get("text", "")) if isinstance(title, dict) else "")
+    name = match.group(1).lower() if match else ""
+    return "bold" in name, "italic" in name or "oblique" in name
+
+
 def import_mindnode(path):
     data = _load_mindnode_plist(path)
     try:
@@ -46,10 +63,16 @@ def import_mindnode(path):
         raise ImportError_("Structure MindNode non reconnue (carte principale introuvable).")
     mm = MindMap(_mindnode_text(main) or "Idée centrale")
 
-    def apply(node, d):
+    def apply(node, d, depth):
         node.text = _mindnode_text(d)
+        bold, italic = _mindnode_font(d)
+        node.bold, node.italic = bold or None, italic
+        if depth == 1:  # la couleur du trait d'une branche principale devient la couleur de branche
+            stroke = d.get("pathStyle", {}).get("strokeStyle", {}) if isinstance(d.get("pathStyle"), dict) else {}
+            node.color = _mindnode_color(stroke.get("color"))
         for sub in d.get("subnodes", []):
-            apply(mm.add_child(node, ""), sub)
+            apply(mm.add_child(node, ""), sub, depth + 1)
+        node.collapsed = bool(d.get("hasFoldedSubnodes")) and bool(node.children)  # après les enfants : add_child déplie
 
-    apply(mm.root, main)
+    apply(mm.root, main, 0)
     return mm

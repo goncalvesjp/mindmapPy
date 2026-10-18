@@ -4,10 +4,10 @@ from PyQt6.QtGui import (QColor, QFont, QFontMetricsF, QImage, QPageLayout, QPag
                          QPdfWriter, QPen)
 from PyQt6.QtWidgets import QLineEdit, QWidget
 
-from core.emoji import replace_shortcut
-from core.icons import store
-from core.layout import compute_layout
-from core.model import MindMap
+from core.icons.emoji import replace_shortcut
+from core.icons.library import store
+from core.model.layout import compute_layout
+from core.model.mindmap import MindMap
 
 MARGIN = 40
 MAX_IMAGE_PX = 16000  # plafond par côté pour les exports image

@@ -7,8 +7,8 @@ from PyQt6.QtCore import Qt
 from PyQt6.QtTest import QTest
 
 from core.canvas import MindMapCanvas
-from core.layout import compute_layout
-from core.model import MindMap
+from core.model.layout import compute_layout
+from core.model.mindmap import MindMap
 
 
 def sample():
@@ -85,7 +85,7 @@ def test_dark_mode_render_and_pdf_stays_light(qtbot, tmp_path):
 
 
 def test_format_roundtrip_and_panel(qtbot, tmp_path):
-    from core.format_panel import FormatPanel
+    from core.panels.format_panel import FormatPanel
     c = MindMapCanvas()
     qtbot.addWidget(c)
     panel = FormatPanel(c)
@@ -106,8 +106,8 @@ def test_format_roundtrip_and_panel(qtbot, tmp_path):
 
 def test_icons_toggle_import_roundtrip(qtbot, tmp_path):
     from PyQt6.QtGui import QColor, QImage
-    from core.icon_panel import IconPanel
-    from core.icons import IconStore, store
+    from core.panels.icon_panel import IconPanel
+    from core.icons.library import IconStore, store
     img = QImage(300, 100, QImage.Format.Format_ARGB32)
     img.fill(QColor("#ff0000"))
     src = tmp_path / "pic.png"
@@ -143,8 +143,8 @@ def test_icons_toggle_import_roundtrip(qtbot, tmp_path):
 
 
 def test_emoji_shortcuts_and_panel(qtbot):
-    from core.emoji import replace_shortcut, search
-    from core.icon_panel import EmojiButton, IconPanel
+    from core.icons.emoji import replace_shortcut, search
+    from core.panels.icon_panel import EmojiButton, IconPanel
     assert replace_shortcut("ok :)") == "ok 🙂"
     assert replace_shortcut("O:)") == "😇"          # le plus long l'emporte
     assert replace_shortcut("http://") is None       # pas de remplacement en milieu de mot
@@ -234,7 +234,7 @@ def test_save_uses_mmp_extension(qtbot, tmp_path, monkeypatch):
 
 def test_start_dialog(qtbot, tmp_path, monkeypatch):
     from PyQt6.QtWidgets import QFileDialog
-    from core.start_dialog import StartDialog
+    from core.dialogs.start_dialog import StartDialog
     f = tmp_path / "a.mmp"
     MindMap("A").save(f)
     d = StartDialog([str(f), str(tmp_path / "absent.mmp")])
@@ -301,7 +301,7 @@ def test_pdf_background_full_page_and_centering(qtbot, tmp_path):
 
 
 def test_pdf_dialog_options_roundtrip(qtbot):
-    from core.pdf_dialog import PdfExportDialog
+    from core.dialogs.pdf_dialog import PdfExportDialog
     d = PdfExportDialog()
     qtbot.addWidget(d)
     d.page.setCurrentText("A3")
@@ -385,7 +385,7 @@ def test_window_import_marks_document_new(qtbot, tmp_path):
 def test_start_dialog_import(qtbot, tmp_path, monkeypatch):
     from PyQt6.QtWidgets import QFileDialog, QMessageBox
     from core.importers import SOURCES
-    from core.start_dialog import StartDialog
+    from core.dialogs.start_dialog import StartDialog
     f = tmp_path / "a.mm"
     f.write_text(FREEPLANE, encoding="utf-8")
     d = StartDialog()
@@ -422,7 +422,7 @@ def test_adopt_import_in_window(qtbot, tmp_path):
 def test_about_dialog_content(qtbot):
     from PyQt6.QtWidgets import QTextBrowser
     from core import __version__
-    from core.about_dialog import FEATURES, SHORTCUTS, AboutDialog
+    from core.dialogs.about_dialog import FEATURES, SHORTCUTS, AboutDialog
     d = AboutDialog()
     qtbot.addWidget(d)
     assert d.title.text() == "MindMapPy" and __version__ in d.version.text()
@@ -432,7 +432,7 @@ def test_about_dialog_content(qtbot):
 
 
 def test_help_menu_opens_about(qtbot, monkeypatch):
-    from core.about_dialog import AboutDialog
+    from core.dialogs.about_dialog import AboutDialog
     from core.main_window import MainWindow
     opened = []
     monkeypatch.setattr(AboutDialog, "exec", lambda self: opened.append(self))
@@ -464,7 +464,7 @@ def test_dark_toggle_button(qtbot):
 
 
 def test_custom_background_per_mode_and_toggle(qtbot, tmp_path):
-    from core.format_panel import FormatPanel
+    from core.panels.format_panel import FormatPanel
     c = MindMapCanvas()
     qtbot.addWidget(c)
     panel = FormatPanel(c)
@@ -516,7 +516,7 @@ def test_image_export_png_jpeg(qtbot, tmp_path):
 
 def test_image_dialog_and_menu(qtbot, tmp_path, monkeypatch):
     from PyQt6.QtWidgets import QFileDialog
-    from core.image_dialog import ImageExportDialog
+    from core.dialogs.image_dialog import ImageExportDialog
     from core.main_window import MainWindow
     w = MainWindow()
     qtbot.addWidget(w)
@@ -544,7 +544,7 @@ def test_version_file_matches_package():
 def test_export_roundtrip_freeplane_and_mindnode(tmp_path):
     from core.exporters import export_freeplane, export_mindnode
     from core.importers import import_map
-    from core.model import MindMap
+    from core.model.mindmap import MindMap
     m = MindMap("Racine & co")
     a = m.add_child(m.root, "A <1>")
     a.bold, a.italic, a.icons = True, True, ["sym:check"]
@@ -572,3 +572,38 @@ def test_window_export_menu(qtbot):
     qtbot.addWidget(w)
     assert [a.text() for a in w.menuExport.actions()] == [t[0] for t in TARGETS]
     w.dirty = False
+
+
+def test_export_mindnode_classic_package(tmp_path):
+    import plistlib
+    from core.exporters import export_mindnode_classic
+    from core.importers import import_map
+    from core.model.mindmap import MindMap
+    m = MindMap("Racine & co")
+    a = m.add_child(m.root, "A <1>")
+    m.add_child(a, "A1")
+    m.add_child(m.root, "B")
+    pkg = tmp_path / "x.mindnode"
+    export_mindnode_classic(m, str(pkg))
+    export_mindnode_classic(m, str(pkg))  # remplace un paquet existant
+    data = plistlib.loads((pkg / "contents.xml").read_bytes())
+    assert data["version"] == 9 and data["canvas"]["mindMaps"][0]["mainNode"]["subnodes"][0]["location"].startswith("{130,")
+    r = import_map(str(pkg))
+    assert r.root.text == "Racine & co" and [c.text for c in r.root.children] == ["A <1>", "B"]
+    assert r.root.children[0].children[0].text == "A1"
+
+
+def test_import_mindnode_classic_sample_features(tmp_path):
+    import plistlib
+    from core.importers import import_mindnode
+    def node(text, font, color, subs=(), folded=False):
+        html_ = f"<p style='color: rgba(1, 1, 1, 1); font: 20px \"Helvetica Neue\"; -cocoa-font-postscriptname: \"{font}\"; '>{text}</p>"
+        return {"title": {"text": html_}, "hasFoldedSubnodes": folded, "subnodes": list(subs),
+                "pathStyle": {"strokeStyle": {"color": color, "width": 6.0}}}
+    main = node("Racine", "HelveticaNeue-Medium", "{1.000000, 1.000000, 1.000000, 1.000000}", [
+        node("A", "HelveticaNeue-Bold", "{1.000000, 0.000000, 0.000000, 1.000000}", [node("A1", "HelveticaNeue-Italic", "{0, 0, 0, 1}")], True)])
+    f = tmp_path / "c.mindnode"
+    f.write_bytes(plistlib.dumps({"version": 9, "canvas": {"mindMaps": [{"mainNode": main}]}}, fmt=plistlib.FMT_BINARY))
+    a = import_mindnode(str(f)).root.children[0]
+    assert (a.color, a.bold, a.collapsed) == ("#ff0000", True, True)
+    assert a.children[0].italic and a.children[0].color is None

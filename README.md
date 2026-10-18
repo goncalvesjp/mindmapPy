@@ -62,16 +62,16 @@ réenregistrés en `.mmp` sans écraser l'original.
 
 ## Organisation du code
 
-- `core/model.py` : arbre de nœuds et (dé)sérialisation, sans Qt.
-- `core/layout.py` : calcul de la disposition, sans Qt.
+- `core/model/mindmap.py` : arbre de nœuds et (dé)sérialisation, sans Qt.
+- `core/model/layout.py` : calcul de la disposition, sans Qt.
 - `core/canvas.py` : widget de dessin et d'interaction, export PDF.
 - `ui/*.ui` : interface dessinée avec **Qt Designer** (fenêtre principale, volets, dialogues). `gui/ui_*.py` : code
   généré par `pyuic6`, à ne jamais éditer à la main. Après une modification d'un `.ui` :
   `.venv/bin/pyuic6 ui/<nom>.ui -o gui/ui_<nom>.py`.
-- `core/main_window.py`, `core/format_panel.py`, `core/icon_panel.py`, `core/start_dialog.py`,
-  `core/pdf_dialog.py`, `core/image_dialog.py`, `core/about_dialog.py` : logique des fenêtres (elles héritent des classes générées).
-- `core/toolbar_icons.py` : icônes de la barre d'outils dessinées en code.
-- `core/icons.py`, `core/emoji.py` : pictogrammes et émoticônes.
+- `core/main_window.py`, `core/panels/` (`format_panel.py`, `icon_panel.py`), `core/dialogs/` (`start_dialog.py`,
+  `pdf_dialog.py`, `image_dialog.py`, `about_dialog.py`) : logique des fenêtres (elles héritent des classes générées).
+- `core/icons/toolbar_icons.py` : icônes de la barre d'outils dessinées en code.
+- `core/icons/library.py`, `core/icons/emoji.py` : pictogrammes et émoticônes.
 - `core/importers/` et `core/exporters/` : import et export Freeplane / MindNode (un module par format).
 - `packaging/` : configuration PyInstaller (macOS, Linux) et Dockerfile du build Linux.
 - `tools/make_icon.py` : génère `assets/icon.png` et `assets/icon.icns` (`.venv/bin/python tools/make_icon.py`).
@@ -97,6 +97,9 @@ l'outil [`container`](https://github.com/apple/container) d'Apple ; sur une mach
 
 ## Limites connues
 
-- L'import MindNode reprend le texte et la structure ; notes, tâches, étiquettes, images et liens entre nœuds sont
+- L'import MindNode (y compris Classic : paquet, archive zip ou fichier seul) reprend le texte, la structure, la couleur des branches principales, le gras / italique et les nœuds repliés ; notes, tâches, étiquettes, images et liens entre nœuds sont
   ignorés. L'import Freeplane ne reprend pas la position gauche / droite des branches.
+- L'export « MindNode Classic » écrit un paquet `.mindnode` (dossier, `contents.xml` version 9) sur le modèle d'un
+  fichier réel ; il reprend texte, structure, couleurs de branche, gras / italique et nœuds repliés, mais n'a pas été
+  testé dans MindNode lui-même.
 - Le Dock macOS peut afficher l'icône de Python tant que l'application n'est pas empaquetée en `.app`.

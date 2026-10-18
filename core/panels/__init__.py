@@ -1,0 +1,1 @@
+"""Volets latéraux (format, pictogrammes)."""

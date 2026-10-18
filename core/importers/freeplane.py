@@ -2,7 +2,7 @@
 import xml.etree.ElementTree as ET
 
 from core.importers.errors import ImportError_
-from core.model import MindMap
+from core.model.mindmap import MindMap
 
 # icônes Freeplane connues -> pictogrammes de l'application (les autres sont ignorées)
 FREEPLANE_ICONS = {

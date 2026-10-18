@@ -5,18 +5,18 @@ from PyQt6.QtCore import QSettings, QStandardPaths, Qt
 from PyQt6.QtGui import QColor, QKeySequence
 from PyQt6.QtWidgets import QColorDialog, QFileDialog, QMainWindow, QMessageBox
 
-from core.about_dialog import AboutDialog
+from core.dialogs.about_dialog import AboutDialog
 from core.canvas import MindMapCanvas
-from core.format_panel import FormatPanel
-from core.icon_panel import IconPanel
-from core.image_dialog import ImageExportDialog
+from core.panels.format_panel import FormatPanel
+from core.panels.icon_panel import IconPanel
+from core.dialogs.image_dialog import ImageExportDialog
 from core.exporters import TARGETS
-from core.icons import store
+from core.icons.library import store
 from core.importers import SOURCES, ImportError_
-from core.model import MindMap
-from core.pdf_dialog import PdfExportDialog
-from core.start_dialog import OPEN_FILTER
-from core.toolbar_icons import fit_icon, sidebar_icon, theme_icon, zoom_icon
+from core.model.mindmap import MindMap
+from core.dialogs.pdf_dialog import PdfExportDialog
+from core.dialogs.start_dialog import OPEN_FILTER
+from core.icons.toolbar_icons import fit_icon, sidebar_icon, theme_icon, zoom_icon
 from gui.ui_main_window import Ui_MainWindow
 
 EXT = ".mmp"
