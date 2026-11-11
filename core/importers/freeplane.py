@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: GPL-3.0-or-later
 """Import de cartes Freeplane (.mm, format FreeMind XML)."""
 import xml.etree.ElementTree as ET
 

@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: GPL-3.0-or-later
 """Export de cartes vers d'autres logiciels, sans dépendance Qt."""
 from core.exporters.freeplane import export_freeplane
 from core.exporters.mindnode import export_mindnode

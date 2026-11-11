@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: GPL-3.0-or-later
 """Pictogrammes : numéros et symboles dessinés en vectoriel, plus images importées par l'utilisateur.
 
 Identifiants : "num:7", "sym:star", "img:<empreinte>".

@@ -95,3 +95,9 @@ make dist         # both archives
 - MindNode import keeps text and structure; notes, tasks, tags, images and cross-links are ignored. Freeplane import
   does not keep the left / right position of branches.
 - The macOS Dock may show the Python icon until the app is packaged as a `.app`.
+
+## License
+
+© 2026 Jean-Pierre Gonçalves. This program is free software, distributed
+under the [GNU GPL v3 or later](LICENSE) (`GPL-3.0-or-later`). It uses PyQt6,
+which is itself licensed under the GPL v3.

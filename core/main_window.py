@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: GPL-3.0-or-later
 """Fenêtre principale : interface définie dans ui/main_window.ui (gui/ui_main_window.py généré)."""
 import os
 

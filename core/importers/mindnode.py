@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: GPL-3.0-or-later
 """Import de cartes MindNode (.mindnode)."""
 import html
 import os

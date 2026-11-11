@@ -26,6 +26,12 @@
          <property name="text"><string>Cartes mentales à la MindNode, en Python et PyQt6</string></property>
         </widget>
        </item>
+       <item>
+        <widget class="QLabel" name="licenseLabel">
+         <property name="openExternalLinks"><bool>true</bool></property>
+         <property name="text"><string>© 2026 Jean-Pierre Gonçalves — Licence &lt;a href="https://www.gnu.org/licenses/gpl-3.0.html"&gt;GNU GPL v3 ou ultérieure&lt;/a&gt;</string></property>
+        </widget>
+       </item>
       </layout>
      </item>
     </layout>

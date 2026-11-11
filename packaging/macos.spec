@@ -7,7 +7,7 @@ VERSION = open(os.path.join(ROOT, "VERSION")).read().strip()
 a = Analysis(
     [os.path.join(ROOT, "main.py")],
     pathex=[ROOT],
-    datas=[(os.path.join(ROOT, "assets"), "assets")],
+    datas=[(os.path.join(ROOT, "assets"), "assets"), (os.path.join(ROOT, "LICENSE"), ".")],
     excludes=["tkinter", "PyQt6.QtWebEngineCore", "PyQt6.QtQml", "PyQt6.QtQuick"],
 )
 pyz = PYZ(a.pure)

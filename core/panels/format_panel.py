@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: GPL-3.0-or-later
 """Panneau latéral rétractable (ui/format_panel.ui) : mise en forme du nœud, couleurs de branche et de fond."""
 from PyQt6.QtCore import Qt
 from PyQt6.QtGui import QColor

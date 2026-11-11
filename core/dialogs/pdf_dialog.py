@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: GPL-3.0-or-later
 """Options d'export PDF (ui/pdf_dialog.ui) : format de page, orientation, ajustement, centrage, marge."""
 from PyQt6.QtCore import QSettings
 from PyQt6.QtWidgets import QDialog, QDialogButtonBox

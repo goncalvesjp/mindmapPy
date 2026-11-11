@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: GPL-3.0-or-later
 """Modèle de la carte mentale : arbre de nœuds, sans dépendance Qt."""
 import json
 from itertools import count

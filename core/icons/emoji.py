@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: GPL-3.0-or-later
 """Catalogue d'émoticônes et remplacement des raccourcis clavier (« :) » → 🙂), pur Python."""
 
 # (caractère, nom, raccourcis, catégorie)

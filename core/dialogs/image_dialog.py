@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: GPL-3.0-or-later
 """Options d'export image (ui/image_dialog.ui) : format PNG / JPEG, résolution, qualité, transparence."""
 from PyQt6.QtCore import QSettings
 from PyQt6.QtWidgets import QDialog, QDialogButtonBox

@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: GPL-3.0-or-later
 """Boîte de dialogue de démarrage : nouvelle carte, ouvrir un fichier ou rouvrir un fichier récent."""
 import os
 

@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: GPL-3.0-or-later
 """Panneau latéral gauche rétractable : bibliothèque de pictogrammes à ajouter aux nœuds."""
 from PyQt6.QtCore import QSize, Qt, pyqtSignal
 from PyQt6.QtGui import QFont

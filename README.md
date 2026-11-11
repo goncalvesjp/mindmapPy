@@ -103,3 +103,9 @@ l'outil [`container`](https://github.com/apple/container) d'Apple ; sur une mach
   fichier réel ; il reprend texte, structure, couleurs de branche, gras / italique et nœuds repliés, mais n'a pas été
   testé dans MindNode lui-même.
 - Le Dock macOS peut afficher l'icône de Python tant que l'application n'est pas empaquetée en `.app`.
+
+## Licence
+
+© 2026 Jean-Pierre Gonçalves. Ce programme est un logiciel libre, distribué
+sous licence [GNU GPL v3 ou ultérieure](LICENSE) (`GPL-3.0-or-later`). Il
+utilise PyQt6, lui-même sous GPL v3.

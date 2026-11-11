@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: GPL-3.0-or-later
 """Génère assets/icon.png (1024 px) et assets/icon.icns. Usage : .venv/bin/python tools/make_icon.py"""
 import os
 import shutil

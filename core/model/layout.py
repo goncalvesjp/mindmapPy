@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: GPL-3.0-or-later
 """Disposition automatique de la carte (pur Python) : racine au centre, branches de part et d'autre."""
 
 H_GAP = 56

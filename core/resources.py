@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: GPL-3.0-or-later
 """Chemin des ressources, aussi dans un exécutable PyInstaller."""
 import os
 import sys

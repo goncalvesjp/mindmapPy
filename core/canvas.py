@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: GPL-3.0-or-later
 """MindMapCanvas : widget peint à la main (zoom, déplacement, sélection, édition en ligne, glisser-déposer)."""
 from PyQt6.QtCore import QEvent, QMarginsF, QPointF, QRectF, QSizeF, Qt, pyqtSignal
 from PyQt6.QtGui import (QColor, QFont, QFontMetricsF, QImage, QPageLayout, QPageSize, QPainter, QPainterPath,

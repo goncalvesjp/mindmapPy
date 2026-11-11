@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: GPL-3.0-or-later
 """Boîte de dialogue « À propos » : nom, version, fonctionnalités et raccourcis clavier."""
 from PyQt6.QtCore import Qt
 from PyQt6.QtGui import QPixmap

@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: GPL-3.0-or-later
 """Export vers Freeplane (.mm)."""
 import xml.etree.ElementTree as ET
 

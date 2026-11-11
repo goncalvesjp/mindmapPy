@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: GPL-3.0-or-later
 """Export vers MindNode Classic : paquet .mindnode (dossier) dont contents.xml est un plist binaire, version 9."""
 import os
 import plistlib
